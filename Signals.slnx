@@ -1,0 +1,7 @@
+﻿<Solution>
+  <Folder Name="/github/">
+    <File Path="readme.md" />
+    <File Path=".gitignore" />
+  </Folder>
+  <Project Path="src\Signals\Signals.csproj" />
+</Solution>
