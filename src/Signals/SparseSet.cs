@@ -14,7 +14,6 @@ public struct SparseSet<TData>() {
     
     public int Count { get; private set; }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public SparseSet(int sparseAmount, int denseAmount) : this() {
         _sparse = sparseAmount > 0 ? new int[sparseAmount] : Array.Empty<int>();
         _dense = denseAmount > 0 ? new TData[denseAmount] : Array.Empty<TData>();
@@ -25,15 +24,16 @@ public struct SparseSet<TData>() {
         Count = 0;
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Has(uint index) 
         => index < _sparse.Length && _sparse[index] != invalid_data;
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ref TData Get(uint index) 
-        => ref _dense[_sparse[index]];
+    public readonly ref TData Get(uint index) {
+        if (!Has(index)) {
+            throw new InvalidOperationException($"element at index {index} does not exist in the sparse set!");
+        }
+        return ref _dense[_sparse[index]];
+    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref TData Add(uint index, in TData data) {
         if (index >= _sparse.Length) {
             var oldLength = _sparse.Length;
@@ -56,8 +56,11 @@ public struct SparseSet<TData>() {
         return ref _dense[denseIdx];
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly TData Remove(uint index) {
+        if (!Has(index)) {
+            throw new InvalidOperationException($"element at index {index} does not exist in the sparse set!");
+        }
+        
         ref var ptr = ref _dense[_sparse[index]];
         var result = ptr;
         _sparse[index] = invalid_data;

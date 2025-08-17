@@ -70,12 +70,7 @@ internal sealed class SparseSetTests {
     public void GetNonExistingDataThrowsException() {
         var set = new SparseSet<int>(10, 5);
         uint index = 5;
-
-        Assert.Throws<InvalidOperationException>(() => {
-            if (!set.Has(index)) {
-                throw new InvalidOperationException("element does not exist!");
-            }
-            ref int value = ref set.Get(index);
-        });
+        
+        Assert.Throws<InvalidOperationException>(() => set.Get(index));
     }
 }
