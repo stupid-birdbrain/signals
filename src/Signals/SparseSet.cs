@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Signals;
 
-public struct SparseSet<TData>() {
+public struct SparseSet<TData>() where TData : unmanaged {
     private const int invalid_data = -1;
     
     private int[] _sparse;
@@ -13,6 +13,13 @@ public struct SparseSet<TData>() {
     public Span<TData> Dense => _dense;
     
     public int Count { get; private set; }
+
+    public ref TData this[int index] {
+        get {
+            ref var ptrIndex = ref Get((uint)index);
+            return ref ptrIndex;
+        }
+    }
     
     public SparseSet(int sparseAmount, int denseAmount) : this() {
         _sparse = sparseAmount > 0 ? new int[sparseAmount] : Array.Empty<int>();
