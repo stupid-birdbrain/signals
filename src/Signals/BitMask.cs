@@ -8,8 +8,7 @@ namespace Signals;
 
 /// <summary>   Provides a way to manipulate flags using bitwise operations.    </summary>
 /// <typeparam name="T"></typeparam>
-public struct BitSet<T> : IEnumerable<int>
-    where T : unmanaged, IUnsignedNumber<T>, IBitwiseOperators<T, T, T>, IShiftOperators<T, int, T> {
+public struct BitSet<T> : IEnumerable<int> where T : unmanaged, IUnsignedNumber<T>, IBitwiseOperators<T, T, T>, IShiftOperators<T, int, T> {
     private const MethodImplOptions _inline_flags = MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization;
 
     public static byte BitSize { get; } = (byte)(Marshal.SizeOf<T>() * 8);
@@ -22,14 +21,11 @@ public struct BitSet<T> : IEnumerable<int>
     public BitSet(T value) => Value = value;
 
     [MethodImpl(_inline_flags)]
-    public readonly bool Get(
-        int index) => !T.IsZero(Value & (T.One << index));
+    public readonly bool Get(int index) => !T.IsZero(Value & (T.One << index));
     [MethodImpl(_inline_flags)]
-    public void Set(
-        int index) => Value |= T.One << index;
+    public void Set(int index) => Value |= T.One << index;
     [MethodImpl(_inline_flags)]
-    public void Unset(
-        int index) => Value &= ~(T.One << index);
+    public void Unset(int index) => Value &= ~(T.One << index);
 
     [MethodImpl(_inline_flags)] public readonly int PopCount() => PopCount(Value);
     [MethodImpl(_inline_flags)] public readonly int LeadingZeroCount() => LeadingZeroCount(Value);
@@ -42,8 +38,7 @@ public struct BitSet<T> : IEnumerable<int>
     [MethodImpl(_inline_flags)] public static BitSet<T> operator |(BitSet<T> a, BitSet<T> b) => new(a.Value | b.Value);
 
     [MethodImpl(_inline_flags)]
-    public static int PopCount(
-        T value) {
+    public static int PopCount(T value) {
         if(typeof(T) == typeof(byte)) { return BitOperations.PopCount(Unsafe.As<T, byte>(ref value)); }
         if(typeof(T) == typeof(ushort)) { return BitOperations.PopCount(Unsafe.As<T, ushort>(ref value)); }
         if(typeof(T) == typeof(uint)) { return BitOperations.PopCount(Unsafe.As<T, uint>(ref value)); }
@@ -52,8 +47,7 @@ public struct BitSet<T> : IEnumerable<int>
     }
 
     [MethodImpl(_inline_flags)]
-    public static int LeadingZeroCount(
-        T value) {
+    public static int LeadingZeroCount(T value) {
         if(typeof(T) == typeof(byte)) { return BitOperations.LeadingZeroCount(Unsafe.As<T, byte>(ref value)); }
         if(typeof(T) == typeof(ushort)) { return BitOperations.LeadingZeroCount(Unsafe.As<T, ushort>(ref value)); }
         if(typeof(T) == typeof(uint)) { return BitOperations.LeadingZeroCount(Unsafe.As<T, uint>(ref value)); }
@@ -62,8 +56,7 @@ public struct BitSet<T> : IEnumerable<int>
     }
 
     [MethodImpl(_inline_flags)]
-    public static int TrailingZeroCount(
-        T value) {
+    public static int TrailingZeroCount(T value) {
         if(typeof(T) == typeof(byte)) { return BitOperations.TrailingZeroCount(Unsafe.As<T, byte>(ref value)); }
         if(typeof(T) == typeof(ushort)) { return BitOperations.TrailingZeroCount(Unsafe.As<T, ushort>(ref value)); }
         if(typeof(T) == typeof(uint)) { return BitOperations.TrailingZeroCount(Unsafe.As<T, uint>(ref value)); }
@@ -71,8 +64,7 @@ public struct BitSet<T> : IEnumerable<int>
         throw new NotSupportedException();
     }
 
-    public static BitSet<T> FromBooleans(
-        ReadOnlySpan<bool> booleans) {
+    public static BitSet<T> FromBooleans(ReadOnlySpan<bool> booleans) {
         Debug.Assert(booleans.Length <= BitSize);
 
         BitSet<T> result = default;
@@ -115,42 +107,33 @@ public struct BitArray<T>() where T : unmanaged, IUnsignedNumber<T>, IBitwiseOpe
     public BitSet<T>[] Array = [];
 
     [MethodImpl(_inline_flags)]
-    public readonly (int maskIndex, int bitIndex) DivRem(
-        int index)
+    public readonly (int maskIndex, int bitIndex) DivRem(int index)
         => Math.DivRem(index, BitsPerMask);
 
     [MethodImpl(_inline_flags)]
-    public readonly bool Get(
-        (int maskIndex, int bitIndex) divrem)
+    public readonly bool Get((int maskIndex, int bitIndex) divrem)
         => Array[divrem.maskIndex].Get(divrem.bitIndex);
 
     [MethodImpl(_inline_flags)]
-    public readonly bool TryGet(
-        (int maskIndex, int bitIndex) divrem)
+    public readonly bool TryGet((int maskIndex, int bitIndex) divrem)
         => divrem.maskIndex < Array.Length && Array[divrem.maskIndex].Get(divrem.bitIndex);
 
     [MethodImpl(_inline_flags)]
-    public readonly void Set(
-        (int maskIndex, int bitIndex) divrem)
+    public readonly void Set((int maskIndex, int bitIndex) divrem)
         => Array[divrem.maskIndex].Set(divrem.bitIndex);
 
     [MethodImpl(_inline_flags)]
-    public readonly void Unset(
-        (int maskIndex, int bitIndex) divrem)
+    public readonly void Unset((int maskIndex, int bitIndex) divrem)
         => Array[divrem.maskIndex].Unset(divrem.bitIndex);
 
     [MethodImpl(_inline_flags)]
-    public readonly bool Get(
-        int index) => Get(DivRem(index));
+    public readonly bool Get(int index) => Get(DivRem(index));
     [MethodImpl(_inline_flags)]
-    public readonly bool TryGet(
-        int index) => TryGet(DivRem(index));
+    public readonly bool TryGet(int index) => TryGet(DivRem(index));
     [MethodImpl(_inline_flags)]
-    public readonly void Set(
-        int index) => Set(DivRem(index));
+    public readonly void Set(int index) => Set(DivRem(index));
     [MethodImpl(_inline_flags)]
-    public readonly void Unset(
-        int index) => Unset(DivRem(index));
+    public readonly void Unset(int index) => Unset(DivRem(index));
 
     [MethodImpl(_inline_flags)]
     public readonly IEnumerable<int> GetSetBits() {

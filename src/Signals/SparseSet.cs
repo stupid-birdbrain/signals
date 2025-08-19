@@ -16,8 +16,7 @@ public struct SparseSet<TData>() where TData : unmanaged {
 
     public ref TData this[int index] {
         get {
-            ref var ptrIndex = ref Get((uint)index);
-            return ref ptrIndex;
+            return ref Get((uint)index);
         }
     }
     

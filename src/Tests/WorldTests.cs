@@ -10,18 +10,28 @@ public class WorldTests {
         typeof(Worlds)
             .GetField("_worlds", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             ?.SetValue(null, new List<World>());
+        
+        Worlds.Initialize();
     }
     
     [Test]
-    public void WorldCreation_IncrementsWorldCount() {
-        var world = Worlds.CreateWorld();
-        
-        Assert.That(Worlds.AllWorlds.Length, Is.EqualTo(1));
-        Assert.That(world.Index, Is.EqualTo(0));
-        
+    public void WorldCreationIncrementsWorldCount() {
         var world2 = Worlds.CreateWorld();
         
         Assert.That(Worlds.AllWorlds.Length, Is.EqualTo(2));
         Assert.That(world2.Index, Is.EqualTo(1));
+    }
+    
+    [Test]
+    public void GetWorld() {
+        var world = Worlds.CreateWorld();
+        var worldref = Worlds.GetWorld(0);
+        
+        Assert.That(worldref.Index, Is.EqualTo(0));
+    }
+    
+    [Test]
+    public void GetInvalidWorld() {
+        Assert.Throws<IndexOutOfRangeException>(() => Worlds.GetWorld(1));
     }
 }
