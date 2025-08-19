@@ -6,8 +6,8 @@ namespace Signals;
 public struct SparseSet<TData>() where TData : unmanaged {
     private const int invalid_data = -1;
     
-    private int[] _sparse;
-    private TData[] _dense;
+    private int[] _sparse = Array.Empty<int>();
+    private TData[] _dense = Array.Empty<TData>();
     
     public Span<int> Sparse => _sparse;
     public Span<TData> Dense => _dense;

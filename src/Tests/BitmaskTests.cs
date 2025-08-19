@@ -23,21 +23,21 @@ public class BitSetTests {
     [Test]
     public void IsZero_ReturnsTrueForZeroValue() {
         var bitSet = new BitSet<uint>(0);
-        Assert.IsTrue(bitSet.IsZero);
+        Assert.That(bitSet.IsZero, Is.True);
     }
 
     [Test]
     public void IsZero_ReturnsFalseForNonZeroValue() {
         var bitSet = new BitSet<uint>(1);
-        Assert.IsFalse(bitSet.IsZero);
+        Assert.That(bitSet.IsZero, Is.False);
     }
 
     [Test]
     public void Get_ReturnsTrueForSetBit() {
         var bitSet = new BitSet<uint>(4);
-        Assert.IsTrue(bitSet.Get(2));
-        Assert.IsFalse(bitSet.Get(0));
-        Assert.IsFalse(bitSet.Get(1));
+        Assert.That(bitSet.Get(2), Is.True);
+        Assert.That(bitSet.Get(0), Is.False);
+        Assert.That(bitSet.Get(1), Is.False);
     }
 
     [Test]
@@ -46,7 +46,7 @@ public class BitSetTests {
         bitSet.Set(3);
 
         Assert.That(bitSet.Value, Is.EqualTo(8u));
-        Assert.IsTrue(bitSet.Get(3));
+        Assert.That(bitSet.Get(3), Is.True);
     }
 
     [Test]
@@ -55,7 +55,7 @@ public class BitSetTests {
         bitSet.Unset(1);
 
         Assert.That(bitSet.Value, Is.EqualTo(8u));
-        Assert.IsFalse(bitSet.Get(1));
+        Assert.That(bitSet.Get(1), Is.False);
     }
 
     [Test]
@@ -97,10 +97,10 @@ public class BitSetTests {
         var bitSet = BitSet<uint>.FromBooleans(values);
 
         Assert.That(bitSet.Value, Is.EqualTo(5u));
-        Assert.IsTrue(bitSet.Get(0));
-        Assert.IsFalse(bitSet.Get(1));
-        Assert.IsTrue(bitSet.Get(2));
-        Assert.IsFalse(bitSet.Get(3));
+        Assert.That(bitSet.Get(0), Is.True);
+        Assert.That(bitSet.Get(1), Is.False);
+        Assert.That(bitSet.Get(2), Is.True);
+        Assert.That(bitSet.Get(3), Is.False);
     }
 
     [Test]
@@ -109,7 +109,7 @@ public class BitSetTests {
         var indices = bitSet.ToList();
 
         Assert.That(indices.Count, Is.EqualTo(2));
-        Assert.Contains(1, indices);
-        Assert.Contains(3, indices);
+        Assert.That(indices, Contains.Item(1));
+        Assert.That(indices, Contains.Item(3));
     }
 }
