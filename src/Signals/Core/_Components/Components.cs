@@ -1,5 +1,5 @@
 ﻿namespace Signals.Core;
 
-public partial class Components {
+internal partial class Components {
     
 }

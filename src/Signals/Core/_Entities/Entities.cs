@@ -2,10 +2,18 @@
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("Tests")]
 namespace Signals.Core;
 
+/*  potential ideas
+    - specified SIMD 256-bit masks and sets for entity presence and component masks rather than a general use structure
+ */
+
+/// <summary>
+///     Central entity storage, handles entity creation and deletion.
+/// </summary>
 [UsedImplicitly(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature | ImplicitUseKindFlags.Access)]
-public partial class Entities {
+internal static partial class Entities {
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
     public struct UniqueWorldData() {
         public int NextEntityIndex = 0;
@@ -31,7 +39,6 @@ public partial class Entities {
 
     public static Entity Create(uint worldIndex) {
         uint index;
-        var entity = new Entity();
 
         EnsureWorldCapacity(worldIndex);
         ref var worldData = ref WorldData[worldIndex];

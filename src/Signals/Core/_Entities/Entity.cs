@@ -13,4 +13,6 @@ public readonly struct Entity {
         Generation = generation;
         WorldIndex = worldIndex;
     }
+    
+    public readonly bool Destroy() => Entities.Destroy(WorldIndex, Index);
 }

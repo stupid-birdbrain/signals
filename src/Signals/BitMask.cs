@@ -6,11 +6,17 @@ using System.Runtime.InteropServices;
 
 namespace Signals;
 
-/// <summary>   Provides a way to manipulate flags using bitwise operations.    </summary>
-/// <typeparam name="T"></typeparam>
+/// <summary>
+///     Provides a way to manipulate flags using bitwise operations.
+/// </summary>
 public struct BitSet<T> : IEnumerable<int> where T : unmanaged, IUnsignedNumber<T>, IBitwiseOperators<T, T, T>, IShiftOperators<T, int, T> {
     private const MethodImplOptions _inline_flags = MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization;
 
+    /// <summary>
+    ///     An empty bitmask.
+    /// </summary>
+    public static readonly BitSet<T> Zero = default;
+    
     public static byte BitSize { get; } = (byte)(Marshal.SizeOf<T>() * 8);
 
     public T Value;

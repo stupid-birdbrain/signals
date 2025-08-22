@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <IsTestProject>true</IsTestProject>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <AssemblyName>Tests</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

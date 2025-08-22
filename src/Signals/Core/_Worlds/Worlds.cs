@@ -1,6 +1,6 @@
 ﻿namespace Signals.Core;
 
-public partial class Worlds {
+internal partial class Worlds {
     public struct CreationOptions() {
         public required bool SupportsMultithreading = false;
     }
