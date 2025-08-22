@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Tests")]
 namespace Signals.Core;
 
 /*  potential ideas
@@ -92,5 +91,13 @@ internal static partial class Entities {
         worldData.FreeEntityIndices.Add((int)entityId);
 
         return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsValid(uint worldIndex, Entity entity) {
+        if(entity.WorldIndex >= WorldData.Length) 
+            return false;
+        
+        return entity.Generation != 0 && entity.Generation == WorldData[entity.WorldIndex].EntityGenerations[entity.Index];
     }
 }

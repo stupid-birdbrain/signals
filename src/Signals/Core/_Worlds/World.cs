@@ -5,9 +5,9 @@
 /// </summary>
 public readonly struct World() {
     public readonly uint Index;
-    private readonly Worlds.CreationOptions _options;
+    private readonly CreationOptions _options;
     
-    public World(uint index, Worlds.CreationOptions options) : this() {
+    public World(uint index, CreationOptions options) : this() {
         Index = index;
         _options = options;
     }

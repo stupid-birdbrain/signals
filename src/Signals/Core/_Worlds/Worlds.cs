@@ -1,10 +1,10 @@
 ﻿namespace Signals.Core;
 
+public struct CreationOptions() {
+    public required bool SupportsMultithreading = false;
+}
+
 internal partial class Worlds {
-    public struct CreationOptions() {
-        public required bool SupportsMultithreading = false;
-    }
-    
     private static List<World> _worlds = [];
     public static Span<World> AllWorlds => _worlds.ToArray().AsSpan();
 

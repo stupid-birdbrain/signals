@@ -5,8 +5,6 @@ namespace Tests;
 
 [TestFixture]
 public class EntityTests {
-    private const int BitArrayBitsPerMask = 64;
-    
     [SetUp]
     public void Setup() {
         typeof(Worlds)
@@ -61,5 +59,21 @@ public class EntityTests {
         Assert.That(entity2reused.Index, Is.EqualTo(0));
         Assert.That(entity2reused.Generation, Is.EqualTo(3));
         Assert.That(entity2reused.WorldIndex, Is.EqualTo(Worlds.DefaultWorld.Index));
+    }
+
+    [Test]
+    public void EntityActive() {
+        var entity = Entities.Create(Worlds.DefaultWorld.Index);
+        var isActive = entity.Valid;
+        Assert.That(isActive, Is.True);
+    }
+
+    [Test]
+    public void EntityInactive() {
+        var entity = Entities.Create(Worlds.DefaultWorld.Index);
+        entity.Destroy();
+        
+        var isActive = entity.Valid;
+        Assert.That(isActive, Is.False);
     }
 }

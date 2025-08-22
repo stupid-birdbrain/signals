@@ -7,6 +7,8 @@ public readonly struct Entity {
     public readonly uint Index;
     public readonly uint WorldIndex;
     public readonly uint Generation;
+
+    public readonly bool Valid => Entities.IsValid(WorldIndex, this);
     
     public Entity(uint index, uint generation, uint worldIndex) {
         Index = index;

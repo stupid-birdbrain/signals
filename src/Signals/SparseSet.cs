@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Signals;
 
-public struct SparseSet<TData>() where TData : unmanaged {
+public struct SparseSet<TData>() where TData : struct {
     private const int invalid_data = -1;
     
     private int[] _sparse = Array.Empty<int>();
