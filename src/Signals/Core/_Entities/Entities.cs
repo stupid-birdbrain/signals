@@ -14,17 +14,18 @@ namespace Signals.Core;
 [UsedImplicitly(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature | ImplicitUseKindFlags.Access)]
 internal static partial class Entities {
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public struct UniqueWorldData() {
+    internal struct UniqueWorldData() {
         public int NextEntityIndex = 0;
 
         public BitArray<ulong> EntityPresenceMasks = new();
+        public BitSet<ulong>[] EntityComponentMasks = Array.Empty<BitSet<ulong>>(); 
         public uint[] EntityGenerations = Array.Empty<uint>();
         public ConcurrentBag<int> FreeEntityIndices = new();
     }
 
-    public static UniqueWorldData[] WorldData = [];
+    internal static UniqueWorldData[] WorldData = Array.Empty<UniqueWorldData>();
     
-    [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureWorldCapacity(uint worldId) {
         int oldLength = WorldData.Length;
         if(worldId >= oldLength) {
@@ -32,6 +33,7 @@ internal static partial class Entities {
             Array.Resize(ref WorldData, newLength);
             for(int i = oldLength; i < newLength; i++) {
                 WorldData[i] = new();
+                WorldData[i].EntityComponentMasks = Array.Empty<BitSet<ulong>>(); 
             }
         }
     }
@@ -61,8 +63,13 @@ internal static partial class Entities {
 
         int currentPresenceMasksLength = worldData.EntityPresenceMasks.Array?.Length ?? 0;
         if (requiredPresenceMasksLength > currentPresenceMasksLength) {
-            // ensure capacity is at least 1 if required (to avoid 0-length array for the bit array)
             Array.Resize(ref worldData.EntityPresenceMasks.Array, Math.Max(1, requiredPresenceMasksLength));
+        }
+        
+        Components.EnsureWorldEntityComponentMaskCapacity(worldIndex, index);
+        var startOffset = (int)(index * Components.ComponentMasksPerEntity);
+        for (int i = 0; i < Components.ComponentMasksPerEntity; i++) {
+            worldData.EntityComponentMasks[startOffset + i] = Signals.BitSet<ulong>.Zero;
         }
         
         uint version = worldData.EntityGenerations[index] + 1;
@@ -76,10 +83,18 @@ internal static partial class Entities {
     }
     
     public static bool Destroy(uint worldId, uint entityId) {
+        if(worldId >= WorldData.Length)
+            return false;
+
         ref var worldData = ref WorldData[worldId];
 
         if(entityId >= worldData.EntityGenerations.Length)
             return false;
+        
+        var startOffset = (int)(entityId * Components.ComponentMasksPerEntity);
+        for (int i = 0; i < Components.ComponentMasksPerEntity; i++) {
+            worldData.EntityComponentMasks[startOffset + i] = Signals.BitSet<ulong>.Zero;
+        }
 
         ref var entityData = ref worldData.EntityGenerations[entityId];
 
@@ -97,7 +112,15 @@ internal static partial class Entities {
     public static bool IsValid(uint worldIndex, Entity entity) {
         if(entity.WorldIndex >= WorldData.Length) 
             return false;
-        
-        return entity.Generation != 0 && entity.Generation == WorldData[entity.WorldIndex].EntityGenerations[entity.Index];
+        if (entity.WorldIndex != worldIndex) {
+            return false; 
+        }
+
+        if(entity.Index >= WorldData[entity.WorldIndex].EntityGenerations.Length)
+            return false;
+
+        return entity.Generation != 0 && 
+               entity.Generation == WorldData[entity.WorldIndex].EntityGenerations[entity.Index] &&
+               WorldData[entity.WorldIndex].EntityPresenceMasks.Get((int)entity.Index);
     }
 }
