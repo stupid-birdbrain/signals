@@ -29,7 +29,7 @@ public class ComponentTests {
 
         typeof(Components)
             .GetField("_components", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
-            ?.SetValue(null, Array.Empty<Components.ComponentInfo>());
+            ?.SetValue(null, Array.Empty<Components.Info>());
     }
     
     [Test]
