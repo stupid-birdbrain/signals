@@ -18,8 +18,11 @@ public readonly struct World() {
         Index = index;
     }
     
-    public void Create() 
+    public Entity Create() 
         => Entities.Create(Index);
+    
+    public Query Query() 
+        => new(Index);
 
     public bool Has<T>() where T : struct, IComponent => Components.HasWorldComponent<T>(Index);
     public ref T Get<T>() where T : struct, IComponent => ref Components.GetWorldComponent<T>(Index);

@@ -3,6 +3,7 @@
     <File Path="readme.md" />
     <File Path=".gitignore" />
   </Folder>
+  <Project Path="Sample\Sample.csproj" Type="Classic C#" />
   <Project Path="src\Signals\Signals.csproj" Type="" />
   <Project Path="src\Tests\Tests.csproj" Type="Classic C#" />
 </Solution>

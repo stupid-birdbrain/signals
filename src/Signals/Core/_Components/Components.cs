@@ -38,8 +38,8 @@ internal partial class Components {
     internal static uint ComponentMasksPerEntity = 1;
     
     private static Info[] _components = Array.Empty<Info>();
-    private static readonly Dictionary<Type, ComponentHandle> _componentByType = new();
-    private static readonly Dictionary<string, ComponentHandle> _componentByName = new();
+    private static Dictionary<Type, ComponentHandle> _componentByType = new();
+    private static Dictionary<string, ComponentHandle> _componentByName = new();
     
     private static ComponentHandle RegisterComponentType<T>() where T : struct, IComponent {
         lock (_componentByType) {
@@ -55,7 +55,7 @@ internal partial class Components {
             _components[handle.Id] = new() {
                 Type = typeof(T),
                 AddComponentFromObject = (entity, value) => SetComponent(entity, (T)value),
-                HasWorldComponentFunc = (worldId) => HasWorldComponent<T>(worldId)
+                HasWorldComponentFunc = (worldId) => HasWorldComponent<T>(worldId) 
             };
             
             _componentByType[typeof(T)] = handle;

@@ -4,7 +4,7 @@ public struct CreationOptions() {
     public required bool SupportsMultithreading = false;
 }
 
-internal partial class Worlds {
+public partial class Worlds {
     private static List<World> _worlds = [];
     public static int WorldCount => _worlds.Count;
     public static Span<World> AllWorlds => _worlds.ToArray().AsSpan();
@@ -34,4 +34,7 @@ internal partial class Worlds {
         
         return world;
     }
+    
+    public static WorldQuery Query() => new();
+    public static WorldEntityQuery QueryEntities(Query sourceQuery) => new WorldEntityQuery(sourceQuery._requiredComponents, sourceQuery._excludedComponents);
 }

@@ -66,6 +66,42 @@ internal partial class Components {
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool HasAllWorldComponents(uint worldId, ReadOnlySpan<BitSet<ulong>> requiredMaskSpan) {
+        if (requiredMaskSpan.IsEmpty) return true; 
+        
+        for (int i = 0; i < requiredMaskSpan.Length; i++) {
+            var requiredBitSet = requiredMaskSpan[i];
+            if (requiredBitSet.IsZero) continue;
+
+            foreach (int bitIndex in requiredBitSet) {
+                uint componentId = (uint)(i * BitSet<ulong>.BitSize + bitIndex);
+                if (!HasWorldComponent(componentId, worldId)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool HasAnyWorldComponents(uint worldId, ReadOnlySpan<BitSet<ulong>> queryMaskSpan) {
+        if (queryMaskSpan.IsEmpty) return false;
+
+        for (int i = 0; i < queryMaskSpan.Length; i++) {
+            var queryBitSet = queryMaskSpan[i];
+            if (queryBitSet.IsZero) continue;
+
+            foreach (int bitIndex in queryBitSet) {
+                uint componentId = (uint)(i * BitSet<ulong>.BitSize + bitIndex);
+                if (HasWorldComponent(componentId, worldId)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static bool HasWorldComponent(uint componentId, uint worldId) {
         if (componentId == 0 || componentId >= _components.Length || _components[componentId].Type == null) {
             return false;

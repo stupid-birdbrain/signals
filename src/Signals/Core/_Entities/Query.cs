@@ -5,10 +5,10 @@ namespace Signals.Core;
 
 public unsafe readonly struct Query(uint worldId) {
     private readonly uint _worldId = worldId;
-    private readonly BitArray<ulong> _requiredComponents = new();
-    private readonly BitArray<ulong> _excludedComponents = new();
+    internal readonly BitArray<ulong> _requiredComponents = new();
+    internal readonly BitArray<ulong> _excludedComponents = new();
 
-    private Query(uint worldId, BitArray<ulong> requiredMask, BitArray<ulong> excludedMask) : this(worldId) {
+    internal Query(uint worldId, BitArray<ulong> requiredMask, BitArray<ulong> excludedMask) : this(worldId) {
         _worldId = worldId;
         _requiredComponents = requiredMask;
         _excludedComponents = excludedMask;
