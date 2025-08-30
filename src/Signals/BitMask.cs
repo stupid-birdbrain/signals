@@ -168,4 +168,46 @@ public struct BitArray<T>() where T : unmanaged, IUnsignedNumber<T>, IBitwiseOpe
         }
         return false;
     }
+    
+    [MethodImpl(_inline_flags)]
+    public BitArray<T> Clone(int index) {
+        var (maskIndex, bitIndex) = DivRem(index);
+
+        int currentLength = Array.Length;
+        uint newRequiredLength = (uint)maskIndex + 1;
+        
+        uint newArrayLength = (uint)Math.Max(currentLength, (int)newRequiredLength);
+        if (newArrayLength > currentLength) {
+            newArrayLength = BitOperations.RoundUpToPowerOf2(newArrayLength);
+        }
+
+        var newInternalArray = new BitSet<T>[newArrayLength];
+
+        if (currentLength > 0) {
+            System.Array.Copy(Array, newInternalArray, System.Math.Min(currentLength, (int)newArrayLength));
+        }
+
+        newInternalArray[maskIndex].Set(bitIndex);
+
+        return new BitArray<T> { Array = newInternalArray };
+    }
+    
+    [MethodImpl(_inline_flags)]
+    public BitArray<T> CloneMerge(ReadOnlySpan<BitSet<T>> otherMaskSpan) {
+        if (otherMaskSpan.IsEmpty) {
+            return this; 
+        }
+
+        uint newArrayLength = (uint)Math.Max(Array.Length, otherMaskSpan.Length);
+
+        var newInternalArray = new BitSet<T>[newArrayLength];
+
+        for (int i = 0; i < newArrayLength; i++) {
+            var currentValue = (i < Array.Length) ? Array[i] : BitSet<T>.Zero;
+            var otherValue = (i < otherMaskSpan.Length) ? otherMaskSpan[i] : BitSet<T>.Zero;
+            newInternalArray[i] = currentValue | otherValue;
+        }
+
+        return new BitArray<T> { Array = newInternalArray };
+    }
 }

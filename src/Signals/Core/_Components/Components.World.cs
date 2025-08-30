@@ -64,4 +64,12 @@ internal partial class Components {
         worldComponentData.Component = default;
         worldComponentData.HasComponent = false;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool HasWorldComponent(uint componentId, uint worldId) {
+        if (componentId == 0 || componentId >= _components.Length || _components[componentId].Type == null) {
+            return false;
+        }
+        return _components[componentId].HasWorldComponentFunc(worldId);
+    }
 }

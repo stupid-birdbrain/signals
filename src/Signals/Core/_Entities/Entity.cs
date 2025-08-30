@@ -11,6 +11,7 @@ public readonly struct Entity {
 
     public readonly bool Valid => Entities.IsValid(WorldIndex, this);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Entity(uint index, uint generation, uint worldIndex) {
         Index = index;
         Generation = generation;
@@ -29,5 +30,12 @@ public readonly struct Entity {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Remove<T>() where T : struct, IComponent => Components.RemoveComponent<T>(this);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void HasAny(ReadOnlySpan<BitSet<ulong>> span) => Components.HasAnyComponents(this, span);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void HasAll(ReadOnlySpan<BitSet<ulong>> span) => Components.HasAllComponents(this, span);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly bool Destroy() => Entities.Destroy(WorldIndex, Index);
 }

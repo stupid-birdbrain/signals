@@ -37,6 +37,11 @@ internal static partial class Entities {
             }
         }
     }
+    
+    internal static void ResetForTesting() {
+        WorldData = Array.Empty<UniqueWorldData>(); // Clear the main WorldData array
+        // _nextWorldId = 0; // If you had a _nextWorldId for fixed-size WorldData, reset it here.
+    }
 
     public static Entity Create(uint worldIndex) {
         uint index;

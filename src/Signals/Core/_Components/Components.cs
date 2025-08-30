@@ -25,9 +25,13 @@ internal partial class Components {
         }
     }
     
+    /// <summary>
+    ///     Simple component metadata.
+    /// </summary>
     internal struct Info {
         public required Type Type;
         public required Action<Entity, object> AddComponentFromObject; 
+        public required Func<uint, bool> HasWorldComponentFunc;
     }
     
     private static uint _componentCount;
@@ -50,7 +54,8 @@ internal partial class Components {
 
             _components[handle.Id] = new() {
                 Type = typeof(T),
-                AddComponentFromObject = (entity, value) => SetComponent(entity, (T)value)
+                AddComponentFromObject = (entity, value) => SetComponent(entity, (T)value),
+                HasWorldComponentFunc = (worldId) => HasWorldComponent<T>(worldId)
             };
             
             _componentByType[typeof(T)] = handle;

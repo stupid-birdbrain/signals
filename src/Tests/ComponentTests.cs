@@ -86,7 +86,7 @@ public class ComponentTests {
         var entity = Entities.Create(Worlds.DefaultWorld.Index);
 
         entity.Set(new Apple() with { Data = 10} );
-        entity.Set(new Orange() with { Data = 10} );
+        entity.Set(new Orange() with {} );
 
         entity.Destroy();
         

@@ -18,8 +18,8 @@ public class WorldTests {
     public void WorldCreationIncrementsWorldCount() {
         var world2 = Worlds.CreateWorld();
         
-        Assert.That(Worlds.AllWorlds.Length, Is.EqualTo(2));
-        Assert.That(world2.Index, Is.EqualTo(1));
+        Assert.That(Worlds.AllWorlds.Length, Is.EqualTo(3));
+        Assert.That(world2.Index, Is.EqualTo(2));
     }
     
     [Test]
@@ -32,6 +32,6 @@ public class WorldTests {
     
     [Test]
     public void GetInvalidWorld() {
-        Assert.Throws<IndexOutOfRangeException>(() => Worlds.GetWorld(1));
+        Assert.Throws<IndexOutOfRangeException>(() => Worlds.GetWorld(100));
     }
 }

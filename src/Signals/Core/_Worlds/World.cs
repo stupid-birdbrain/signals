@@ -5,11 +5,17 @@
 /// </summary>
 public readonly struct World() {
     public readonly uint Index;
-    private readonly CreationOptions _options;
+    private readonly CreationOptions? _options;
+    
+    public readonly bool Valid => Index < Worlds.WorldCount;
     
     public World(uint index, CreationOptions options) : this() {
         Index = index;
         _options = options;
+    }
+    
+    public World(uint index) : this() {
+        Index = index;
     }
     
     public void Create() 
