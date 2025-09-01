@@ -18,11 +18,29 @@ internal partial class Components {
         
         internal static UniqueWorldEntityComponentData[] WorldEntityData = [];
         
-        public static ComponentHandle Handle = ComponentHandle.Invalid;
+        public static Handle Handle = Handle.Invalid;
 
         static EntityComponentData() {
             Handle = RegisterComponentType<T>();
         }
+    }
+    
+    /// <summary>
+    ///     A handle to a registered component type.
+    /// </summary>
+    internal readonly struct Handle {
+        public static readonly Handle Invalid = default;
+
+        public readonly uint Id;
+        public readonly bool IsValid => Id != 0;
+
+        internal Handle(uint id) => Id = id;
+    
+        public override bool Equals(object? obj) => obj is Handle other && Equals(other);
+        public bool Equals(Handle other) => Id == other.Id;
+        public override int GetHashCode() => Id.GetHashCode();
+        public static bool operator ==(Handle left, Handle right) => left.Equals(right);
+        public static bool operator !=(Handle left, Handle right) => !left.Equals(right);
     }
     
     /// <summary>
@@ -38,16 +56,16 @@ internal partial class Components {
     internal static uint ComponentMasksPerEntity = 1;
     
     private static Info[] _components = Array.Empty<Info>();
-    private static Dictionary<Type, ComponentHandle> _componentByType = new();
-    private static Dictionary<string, ComponentHandle> _componentByName = new();
+    private static Dictionary<Type, Handle> _componentByType = new();
+    private static Dictionary<string, Handle> _componentByName = new();
     
-    private static ComponentHandle RegisterComponentType<T>() where T : struct, IComponent {
+    private static Handle RegisterComponentType<T>() where T : struct, IComponent {
         lock (_componentByType) {
             if(_componentByType.TryGetValue(typeof(T), out var existingHandle)) {
                 return existingHandle;
             }
 
-            var handle = new ComponentHandle(++_componentCount);
+            var handle = new Handle(++_componentCount);
             if (handle.Id >= _components.Length) {
                 Array.Resize(ref _components, (int)BitOperations.RoundUpToPowerOf2(handle.Id + 1));
             }
@@ -74,7 +92,7 @@ internal partial class Components {
         => RuntimeHelpers.RunClassConstructor(typeof(EntityComponentData<>).MakeGenericType(type).TypeHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static ComponentHandle GetComponentHandle<T>() where T : struct, IComponent
+    internal static Handle GetComponentHandle<T>() where T : struct, IComponent
         => EntityComponentData<T>.Handle;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using Raylib_cs;
 using Signals.Core;
 using static Raylib_cs.Raylib;
@@ -39,6 +40,8 @@ public static class Program {
             var query = new WorldEntityQuery().With<Position>().Iterate();
 
             while (query.Next() is { } wld) {
+                Console.WriteLine(wld.Index);
+                
                 var entityquery = wld.Query().With<Position>().Iterate();
                 while (entityquery.Next() is { } entity) {
                     ref var pos = ref entity.Get<Position>();
