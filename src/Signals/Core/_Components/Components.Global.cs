@@ -1,6 +1,6 @@
 ﻿namespace Signals.Core;
 
-internal partial class Components {
+partial class Components {
     public class GlobalComponentData<T> where T : struct, IComponent {
         public static T Component;
         public static bool Has;

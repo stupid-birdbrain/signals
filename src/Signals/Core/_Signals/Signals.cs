@@ -1,3 +1,3 @@
 ﻿namespace Signals.Core;
 
-public interface ISignal;
+public interface Signals;

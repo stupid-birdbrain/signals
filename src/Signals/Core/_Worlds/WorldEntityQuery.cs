@@ -95,6 +95,10 @@ public readonly struct WorldEntityQuery {
                 if (!currentWorld.Valid) {
                     continue;
                 }
+                
+                if (currentWorld.Index == Worlds.PrefabWorld.Index) {
+                    continue;
+                }
 
                 var entityQueryForWorld = new Query(worldId, 
                     new BitArray<ulong> { Array = requiredSpan.ToArray() },

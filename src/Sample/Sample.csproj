@@ -15,4 +15,10 @@
       <ProjectReference Include="..\Signals\Signals.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Prefabs\TestPrefab.prefab.hjson">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
@@ -10,7 +11,7 @@ public interface IComponent;
 ///     Central component storage.
 /// </summary>
 [UsedImplicitly(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature | ImplicitUseKindFlags.Access)]
-internal partial class Components {
+public partial class Components {
     internal class EntityComponentData<T> where T : struct, IComponent {
         internal struct UniqueWorldEntityComponentData() {
             public SparseSet<T> SparseSet = new();
@@ -52,16 +53,20 @@ internal partial class Components {
         public required Func<uint, bool> HasWorldComponentFunc;
     }
     
-    private static uint _componentCount;
+    internal static uint _componentCount;
     internal static uint ComponentMasksPerEntity = 1;
     
-    private static Info[] _components = Array.Empty<Info>();
+    internal static Info[] _components = Array.Empty<Info>();
+    
     private static Dictionary<Type, Handle> _componentByType = new();
     private static Dictionary<string, Handle> _componentByName = new();
     
+    private static Dictionary<string, Handle> _componentNameToHandle = new();
+    private static Dictionary<Handle, Type> _componentHandleToType = new();
+    
     private static Handle RegisterComponentType<T>() where T : struct, IComponent {
         lock (_componentByType) {
-            if(_componentByType.TryGetValue(typeof(T), out var existingHandle)) {
+            if (_componentByType.TryGetValue(typeof(T), out var existingHandle)) {
                 return existingHandle;
             }
 
@@ -73,22 +78,23 @@ internal partial class Components {
             _components[handle.Id] = new() {
                 Type = typeof(T),
                 AddComponentFromObject = (entity, value) => SetComponent(entity, (T)value),
-                HasWorldComponentFunc = (worldId) => HasWorldComponent<T>(worldId) 
+                HasWorldComponentFunc = (worldId) => HasWorldComponent<T>(worldId)
             };
-            
+
             _componentByType[typeof(T)] = handle;
-            _componentByName[typeof(T).Name] = handle;
+            _componentNameToHandle[typeof(T).Name] = handle;
+            _componentHandleToType[handle] = typeof(T);
 
             uint newMasksPerEntityNeeded = (handle.Id / (uint)BitSet<ulong>.BitSize) + 1;
             if (newMasksPerEntityNeeded > ComponentMasksPerEntity) {
                 ComponentMasksPerEntity = newMasksPerEntityNeeded;
             }
-            
+
             return handle;
         }
     }
     
-    internal static void RegisterComponent(Type type)
+    public static void RegisterComponent(Type type)
         => RuntimeHelpers.RunClassConstructor(typeof(EntityComponentData<>).MakeGenericType(type).TypeHandle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -247,5 +253,43 @@ internal partial class Components {
             }
         }
         return false;
+    }
+    
+    internal static Handle GetComponentHandle(Type componentType)
+    {
+        lock (_componentByType) {
+            if (_componentByType.TryGetValue(componentType, out var handle)) {
+                return handle;
+            }
+            throw new ArgumentException($"Component type '{componentType.Name}' not found.");
+        }
+    }
+    
+    internal static bool TryGetComponentHandleFromName(string componentName, [NotNullWhen(true)] out Handle handle)
+        => _componentNameToHandle.TryGetValue(componentName, out handle);
+    
+    internal static Type GetComponentType(Handle handle) {
+        if (_componentHandleToType.TryGetValue(handle, out var type)) {
+            return type;
+        }
+        throw new ArgumentException($"no component type registered for handle index {handle.Id}.");
+    }
+    
+    internal static Type GetComponentTypeFromName(string componentName) {
+        if (TryGetComponentHandleFromName(componentName, out var handle)) {
+            return GetComponentType(handle);
+        }
+        throw new KeyNotFoundException($"No component type registered with name '{componentName}'.");
+    }
+    
+    internal static void AddComponentByHandle(Entity entity, Handle handle, object value) {
+        if (!entity.Valid) {
+            throw new InvalidOperationException($"cant add component to invalid entity {entity}.");
+        }
+        if (!handle.IsValid) {
+            throw new ArgumentException("invalid component handle.", nameof(handle));
+        }
+        var componentInfo = _components[handle.Id];
+        componentInfo.AddComponentFromObject(entity, value);
     }
 }

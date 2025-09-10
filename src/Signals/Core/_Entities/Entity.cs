@@ -10,6 +10,8 @@ public readonly struct Entity {
     public readonly uint Generation;
 
     public readonly bool Valid => Entities.IsValid(WorldIndex, this);
+
+    public static readonly Entity Invalid = default;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Entity(uint index, uint generation, uint worldIndex) {

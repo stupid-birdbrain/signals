@@ -6,6 +6,8 @@ namespace Signals;
 internal struct Marker : IComponent;
 internal struct EntityMarker : IComponent;
 
+//test
+
 public class Program {
     public static void Main() {
         Worlds.Initialize();

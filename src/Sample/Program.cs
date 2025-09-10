@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
+using System.Reflection;
 using Raylib_cs;
 using Signals.Core;
 using static Raylib_cs.Raylib;
@@ -9,6 +10,21 @@ namespace Sample;
 
 internal struct Position : IComponent {
     public Vector2 Value;
+}
+
+internal struct Velocity : IComponent {
+    public Vector2 Value;
+}
+
+public struct Transform2D : IComponent {
+    public Vector2 Position;
+    public float Rotation;
+    public Vector2 Scale;
+}
+
+internal struct TestComponent : IComponent
+{
+    public int Data;
 }
 
 public static class Program {
@@ -26,27 +42,58 @@ public static class Program {
         Worlds.Initialize();
         
         var world = Worlds.DefaultWorld;
+        
+        Components.RegisterComponent(typeof(Position));
+        Components.RegisterComponent(typeof(Velocity));
+        Components.RegisterComponent(typeof(Transform2D));
+        
+        PrefabLoading.LoadAllPrefabs(Assembly.GetExecutingAssembly());
 
-        for (int i = 0; i < 50 ; i++) {
-            var entity = world.Create();
-            entity.Set(new Position() { Value = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
-        }
+        // Prefabs.TryGetPrefab("TestPrefab", out var prefab);
+        //
+        // var ent = Prefabs.Instantiate(prefab, world.Index);
+        //
+        //
+        // var data = ent.Get<TestComponent>().Data;
+        // var velo = ent.Get<Velocity>().Value;
+        //
+        // Console.WriteLine(data);
+        // Console.WriteLine(velo);
+        
+        // for (int i = 0; i < 50 ; i++) {
+        //     var entity = world.Create();
+        //     entity.Set(new Position() { Value = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
+        //     entity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
+        // }
+        
+        // var srcEntity = world.Create();
+        // srcEntity.Set(new Position() { Value = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
+        // srcEntity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
 
         while (!WindowShouldClose()) {
+
+            var query = world.Query().With<Transform2D>().With<Velocity>().Iterate();
+            while (query.Next() is { } entity) {
+                ref var pos = ref entity.Get<Transform2D>();
+                ref var vel = ref entity.Get<Velocity>();
+                
+                pos.Position += vel.Value * GetFrameTime();
+            }
+            
             #region drawing
             BeginDrawing();
             ClearBackground(Color.DarkGray);
             
-            var query = new WorldEntityQuery().With<Position>().Iterate();
+            var worldQuery = new WorldEntityQuery().With<Transform2D>().Iterate();
 
-            while (query.Next() is { } wld) {
-                Console.WriteLine(wld.Index);
+            while (worldQuery.Next() is { } wld) {
+                //Console.WriteLine(wld.Index);
                 
-                var entityquery = wld.Query().With<Position>().Iterate();
+                var entityquery = wld.Query().With<Transform2D>().Iterate();
                 while (entityquery.Next() is { } entity) {
-                    ref var pos = ref entity.Get<Position>();
+                    ref var pos = ref entity.Get<Transform2D>();
                     
-                    DrawRectangleV(pos.Value, new Vector2(10, 10), Color.White);
+                    DrawRectangleV(pos.Position, new Vector2(10, 10), Color.White);
                 }
             }
             

@@ -1,4 +1,17 @@
-﻿    Position: {
-        X: 0
+﻿Transform2D: {
+    Position: {
+        X: 100
+        Y: 50
+    }
+}
+
+Velocity: { 
+    Value: {
+        X: 2
         Y: 0
     }
+}
+
+TestComponent: {
+    Data: 10
+}

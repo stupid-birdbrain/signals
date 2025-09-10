@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Signals.Core;
 
-internal partial class Components {
+partial class Components {
     internal class WorldComponentData<T> where T : struct, IComponent {
         internal struct LocalWorldComponentData {
             public T Component;

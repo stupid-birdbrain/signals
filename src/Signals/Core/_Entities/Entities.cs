@@ -74,7 +74,7 @@ internal static partial class Entities {
         Components.EnsureWorldEntityComponentMaskCapacity(worldIndex, index);
         var startOffset = (int)(index * Components.ComponentMasksPerEntity);
         for (int i = 0; i < Components.ComponentMasksPerEntity; i++) {
-            worldData.EntityComponentMasks[startOffset + i] = Signals.BitSet<ulong>.Zero;
+            worldData.EntityComponentMasks[startOffset + i] = global::Signals.BitSet<ulong>.Zero;
         }
         
         uint version = worldData.EntityGenerations[index] + 1;
@@ -98,7 +98,7 @@ internal static partial class Entities {
         
         var startOffset = (int)(entityId * Components.ComponentMasksPerEntity);
         for (int i = 0; i < Components.ComponentMasksPerEntity; i++) {
-            worldData.EntityComponentMasks[startOffset + i] = Signals.BitSet<ulong>.Zero;
+            worldData.EntityComponentMasks[startOffset + i] = global::Signals.BitSet<ulong>.Zero;
         }
 
         ref var entityData = ref worldData.EntityGenerations[entityId];
