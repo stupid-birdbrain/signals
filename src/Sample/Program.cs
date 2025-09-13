@@ -27,6 +27,8 @@ internal struct TestComponent : IComponent
     public int Data;
 }
 
+internal struct Marker : IComponent;
+
 public static class Program {
     public static void Main() {
         SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
