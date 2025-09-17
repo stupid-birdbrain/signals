@@ -8,7 +8,7 @@ namespace Signals.Core;
 ///     Central entity storage, handles entity creation and deletion.
 /// </summary>
 [UsedImplicitly(ImplicitUseKindFlags.InstantiatedNoFixedConstructorSignature | ImplicitUseKindFlags.Access)]
-internal static partial class Entities {
+public static partial class Entities {
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal struct UniqueWorldData() {
         public int NextEntityIndex = 0;

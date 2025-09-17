@@ -45,9 +45,9 @@ public static class Program {
         
         var world = Worlds.DefaultWorld;
         
-        Components.RegisterComponent(typeof(Position));
-        Components.RegisterComponent(typeof(Velocity));
-        Components.RegisterComponent(typeof(Transform2D));
+        // Components.RegisterComponent(typeof(Position));
+        // Components.RegisterComponent(typeof(Velocity));
+        // Components.RegisterComponent(typeof(Transform2D));
         
         PrefabLoading.LoadAllPrefabs(Assembly.GetExecutingAssembly());
 
@@ -62,15 +62,22 @@ public static class Program {
         // Console.WriteLine(data);
         // Console.WriteLine(velo);
         
+        
+        
         for (int i = 0; i < 50 ; i++) {
             var entity = world.Create();
             entity.Set(new Transform2D() { Position = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
             entity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
         }
         
-        // var srcEntity = world.Create();
-        // srcEntity.Set(new Position() { Value = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
-        // srcEntity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
+        var srcEntity = world.Create();
+        srcEntity.Set(new Position() { Value = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
+        srcEntity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
+        srcEntity.Set(new Marker());
+
+        var asd = Entities.WorldData[Worlds.DefaultWorld.Index].EntityComponentMasks[srcEntity.Index];
+
+        Console.WriteLine(asd.ToString());
 
         while (!WindowShouldClose()) {
 
