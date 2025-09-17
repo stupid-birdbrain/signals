@@ -62,11 +62,11 @@ public static class Program {
         // Console.WriteLine(data);
         // Console.WriteLine(velo);
         
-        // for (int i = 0; i < 50 ; i++) {
-        //     var entity = world.Create();
-        //     entity.Set(new Position() { Value = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
-        //     entity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
-        // }
+        for (int i = 0; i < 50 ; i++) {
+            var entity = world.Create();
+            entity.Set(new Transform2D() { Position = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
+            entity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
+        }
         
         // var srcEntity = world.Create();
         // srcEntity.Set(new Position() { Value = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });

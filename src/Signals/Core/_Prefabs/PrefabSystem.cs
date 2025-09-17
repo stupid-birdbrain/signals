@@ -12,7 +12,7 @@ public struct PrefabInfo : IComponent {
     public static implicit operator string(in PrefabInfo info) => info.Identifier;
 }
 
-[JsonConverter(typeof(PrefabLoading.PrefabJsonConverter))]
+[JsonConverter(typeof(PrefabJsonConverter))]
 public readonly struct Prefab {
     public static readonly Prefab Invalid = default;
 
@@ -77,9 +77,9 @@ public static class Prefabs {
 
             var componentId = componentHandle.Id;
             var entityComponentMaskSpan = Components.GetEntityComponentMaskSpan(prefab.Entity.WorldIndex, prefab.Entity.Index);
-            var (div, rem) = Math.DivRem((int)componentId, BitSet<ulong>.BitSize);
+            var (div, rem) = Math.DivRem((int)componentId, Bitset256.CAPACITY);
 
-            if (div < entityComponentMaskSpan.Length && entityComponentMaskSpan[div].Get((int)rem)) {
+            if (div < entityComponentMaskSpan.Length && entityComponentMaskSpan[div].IsSet(rem)) {
                 var getMethod = typeof(Components)
                     .GetMethod(nameof(Components.GetComponent), System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
                     .MakeGenericMethod(componentType);
@@ -105,14 +105,14 @@ public sealed class PrefabLoading {
     private static readonly HashSet<Type> jsonConverterTypes = new();
 
     public static void RegisterJsonConverter(JsonConverter converter) {
-        if (jsonConverterTypes.Add(converter.GetType())) {
+        if(jsonConverterTypes.Add(converter.GetType())) {
             jsonSerializer.Converters.Add(converter);
         }
     }
 
     public static void RegisterComponentTypesFromAssembly(Assembly assembly) {
-        foreach (Type type in assembly.GetTypes()) {
-            if (type.IsValueType && !type.IsInterface && !type.IsAbstract && typeof(IComponent).IsAssignableFrom(type)) {
+        foreach(Type type in assembly.GetTypes()) {
+            if(type.IsValueType && !type.IsInterface && !type.IsAbstract && typeof(IComponent).IsAssignableFrom(type)) {
                 Components.RegisterComponent(type);
             }
         }
@@ -123,13 +123,13 @@ public sealed class PrefabLoading {
         RegisterComponentTypesFromAssembly(typeof(IComponent).Assembly);
 
         string? assemblyPath = assembly.Location;
-        
-        if (string.IsNullOrEmpty(assemblyPath)) {
+
+        if(string.IsNullOrEmpty(assemblyPath)) {
             assemblyPath = AppContext.BaseDirectory;
         }
         else {
             assemblyPath = Path.GetDirectoryName(assemblyPath);
-            if (string.IsNullOrEmpty(assemblyPath)) {
+            if(string.IsNullOrEmpty(assemblyPath)) {
                 assemblyPath = AppContext.BaseDirectory;
             }
         }
@@ -138,11 +138,12 @@ public sealed class PrefabLoading {
 #endif
         List<Exception>? errors = null;
 
-        foreach (string fullFilePath in Directory.EnumerateFiles(assemblyPath!, $"*{extension}", SearchOption.AllDirectories)) {
+        foreach(string fullFilePath in Directory.EnumerateFiles(assemblyPath!, $"*{extension}",
+                    SearchOption.AllDirectories)) {
             string identifier = Path.GetFileNameWithoutExtension(fullFilePath);
             if(identifier.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase)) {
                 identifier = Path.GetFileNameWithoutExtension(identifier);
-            } 
+            }
 
             string hjsonText = File.ReadAllText(fullFilePath);
             string standardJsonString = HjsonValue.Parse(hjsonText).ToString(Stringify.Plain);
@@ -151,23 +152,25 @@ public sealed class PrefabLoading {
                 var prefabHandle = JsonConvert.DeserializeObject<Prefab>(standardJsonString);
                 prefabHandle.Set(new PrefabInfo { Identifier = identifier });
                 Prefabs.RegisterPrefab(identifier, prefabHandle);
-                
-                
+
+
 #if DEBUG
                 Console.WriteLine($"Successfully loaded prefab: {identifier}");
 #endif
             }
-            catch (Exception e) {
-                (errors ??= new()).Add(new Exception($"Error loading prefab '{identifier}' from '{fullFilePath}': {e.Message}", e));
+            catch(Exception e) {
+                (errors ??= new()).Add(
+                    new Exception($"Error loading prefab '{identifier}' from '{fullFilePath}': {e.Message}", e));
             }
         }
 
-        if (errors != null) {
+        if(errors != null) {
             throw new AggregateException($"Errors occurred parsing *{extension} files", errors);
         }
     }
-    
-    internal sealed class PrefabJsonConverter : JsonConverter {
+}
+
+internal sealed class PrefabJsonConverter : JsonConverter {
     public override bool CanConvert(Type objectType) => objectType == typeof(Prefab) || objectType == typeof(Entity);
 
     public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) => throw new NotImplementedException("asd");
@@ -215,6 +218,5 @@ public sealed class PrefabLoading {
             var setMethod = typeof(Components).GetMethod(nameof(Components.SetComponent), BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(componentType);
             setMethod.Invoke(null, paramArray);
         }
-    }
     }
 }

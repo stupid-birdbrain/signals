@@ -4,10 +4,6 @@ using System.Runtime.CompilerServices;
 
 namespace Signals.Core;
 
-/*  potential ideas
-    - specified SIMD 256-bit masks and sets for entity presence and component masks rather than a general use structure
- */
-
 /// <summary>
 ///     Central entity storage, handles entity creation and deletion.
 /// </summary>
@@ -18,7 +14,7 @@ internal static partial class Entities {
         public int NextEntityIndex = 0;
 
         public BitArray<ulong> EntityPresenceMasks = new();
-        public BitSet<ulong>[] EntityComponentMasks = Array.Empty<BitSet<ulong>>(); 
+        public Bitset256[] EntityComponentMasks = Array.Empty<Bitset256>(); 
         public uint[] EntityGenerations = Array.Empty<uint>();
         public ConcurrentBag<int> FreeEntityIndices = new();
     }
@@ -33,7 +29,7 @@ internal static partial class Entities {
             Array.Resize(ref WorldData, newLength);
             for(int i = oldLength; i < newLength; i++) {
                 WorldData[i] = new();
-                WorldData[i].EntityComponentMasks = Array.Empty<BitSet<ulong>>(); 
+                WorldData[i].EntityComponentMasks = Array.Empty<Bitset256>(); 
             }
         }
     }
@@ -73,7 +69,7 @@ internal static partial class Entities {
         Components.EnsureWorldEntityComponentMaskCapacity(worldIndex, index);
         var startOffset = (int)(index * Components.ComponentMasksPerEntity);
         for (int i = 0; i < Components.ComponentMasksPerEntity; i++) {
-            worldData.EntityComponentMasks[startOffset + i] = global::Signals.BitSet<ulong>.Zero;
+            worldData.EntityComponentMasks[startOffset + i] = Bitset256.Zero;
         }
         
         uint version = worldData.EntityGenerations[index] + 1;
@@ -97,7 +93,7 @@ internal static partial class Entities {
         
         var startOffset = (int)(entityId * Components.ComponentMasksPerEntity);
         for (int i = 0; i < Components.ComponentMasksPerEntity; i++) {
-            worldData.EntityComponentMasks[startOffset + i] = global::Signals.BitSet<ulong>.Zero;
+            worldData.EntityComponentMasks[startOffset + i] = Bitset256.Zero;
         }
 
         ref var entityData = ref worldData.EntityGenerations[entityId];

@@ -141,26 +141,35 @@ public partial class Components {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static Span<BitSet<ulong>> GetEntityComponentMaskSpan(uint worldId, uint entityIndex) {
+    internal static Span<Bitset256> GetEntityComponentMaskSpan(
+        uint worldId,
+        uint entityIndex
+    )
+    {
         ref var worldData = ref Entities.WorldData[worldId];
         var startOffset = (int)(entityIndex * ComponentMasksPerEntity);
-        return new Span<BitSet<ulong>>(worldData.EntityComponentMasks, startOffset, (int)ComponentMasksPerEntity);
+        return new Span<Bitset256>(worldData.EntityComponentMasks, startOffset,
+            (int)ComponentMasksPerEntity);
     }
     
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool HasComponent<T>(Entity entity) where T : struct, IComponent {
-        if (!entity.Valid) {
+    internal static bool HasComponent<T>(Entity entity) where T : struct, IComponent
+    {
+        if (!entity.Valid)
+        {
             return false;
         }
-        
+
         var componentId = GetComponentIndex<T>();
         if (componentId == 0) return false;
-        
-        var entityComponentMaskSpan = GetEntityComponentMaskSpan(entity.WorldIndex, entity.Index);
 
-        var (div, rem) = Math.DivRem((int)componentId, BitSet<ulong>.BitSize);
-        return div < entityComponentMaskSpan.Length && entityComponentMaskSpan[div].Get((int)rem);
+        var entityComponentMaskSpan =
+            GetEntityComponentMaskSpan(entity.WorldIndex, entity.Index);
+
+        var (div, rem) = Math.DivRem((int)componentId, Bitset256.CAPACITY);
+        return div < entityComponentMaskSpan.Length &&
+               entityComponentMaskSpan[div].IsSet(rem);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -197,6 +206,7 @@ public partial class Components {
         return ref sparseSet.Add(entity.Index, in value);
     }
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void RemoveComponent<T>(Entity entity) where T : struct, IComponent {
         if (!entity.Valid) {
@@ -208,30 +218,32 @@ public partial class Components {
 
         if (entity.WorldIndex >= EntityComponentData<T>.WorldEntityData.Length) return;
         ref var sparseSet = ref EntityComponentData<T>.WorldEntityData[entity.WorldIndex].SparseSet;
-        if (!sparseSet.Has(entity.Index)) return; 
+        if (!sparseSet.Has(entity.Index)) return;
 
         var entityComponentMaskSpan = GetEntityComponentMaskSpan(entity.WorldIndex, entity.Index);
-        var (div, rem) = Math.DivRem((int)componentId, BitSet<ulong>.BitSize);
+        var (div, rem) = Math.DivRem((int)componentId, Bitset256.CAPACITY);
         if (div < entityComponentMaskSpan.Length) {
-            entityComponentMaskSpan[div].Unset((int)rem);
+            entityComponentMaskSpan[div].Clear(rem);
         }
 
         sparseSet.Remove(entity.Index);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool HasAllComponents(Entity entity, ReadOnlySpan<BitSet<ulong>> requiredMaskSpan) {
+    internal static bool HasAllComponents(Entity entity, ReadOnlySpan<Bitset256> requiredMaskSpan) {
         if (!entity.Valid) return false;
 
         var entityComponentMaskSpan = GetEntityComponentMaskSpan(entity.WorldIndex, entity.Index);
 
-        int minLength = Math.Min(entityComponentMaskSpan.Length, requiredMaskSpan.Length);
+        int minLength =
+            Math.Min(entityComponentMaskSpan.Length, requiredMaskSpan.Length);
 
         for (int i = 0; i < minLength; i++) {
-            if ((requiredMaskSpan[i].Value & entityComponentMaskSpan[i].Value) != requiredMaskSpan[i].Value) {
+            if (!entityComponentMaskSpan[i].Contains(requiredMaskSpan[i])) {
                 return false;
             }
         }
+
         for (int i = minLength; i < requiredMaskSpan.Length; i++) {
             if (!requiredMaskSpan[i].IsZero) {
                 return false;
@@ -240,23 +252,23 @@ public partial class Components {
         return true;
     }
     
-    internal static bool HasAnyComponents(Entity entity, ReadOnlySpan<BitSet<ulong>> queryMaskSpan) {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static bool HasAnyComponents(Entity entity, ReadOnlySpan<Bitset256> queryMaskSpan) {
         if (!entity.Valid) return false;
-    
+
         var entityComponentMaskSpan = GetEntityComponentMaskSpan(entity.WorldIndex, entity.Index);
-        
+
         int minLength = Math.Min(entityComponentMaskSpan.Length, queryMaskSpan.Length);
-    
+
         for (int i = 0; i < minLength; i++) {
-            if ((queryMaskSpan[i].Value & entityComponentMaskSpan[i].Value) != 0) {
+            if (entityComponentMaskSpan[i].AndAny(queryMaskSpan[i])) {
                 return true;
             }
         }
         return false;
     }
     
-    internal static Handle GetComponentHandle(Type componentType)
-    {
+    internal static Handle GetComponentHandle(Type componentType) {
         lock (_componentByType) {
             if (_componentByType.TryGetValue(componentType, out var handle)) {
                 return handle;
@@ -265,8 +277,7 @@ public partial class Components {
         }
     }
     
-    internal static bool TryGetComponentHandleFromName(string componentName, [NotNullWhen(true)] out Handle handle)
-        => _componentNameToHandle.TryGetValue(componentName, out handle);
+    internal static bool TryGetComponentHandleFromName(string componentName, [NotNullWhen(true)] out Handle handle) => _componentNameToHandle.TryGetValue(componentName, out handle);
     
     internal static Type GetComponentType(Handle handle) {
         if (_componentHandleToType.TryGetValue(handle, out var type)) {
