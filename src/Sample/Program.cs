@@ -75,9 +75,9 @@ public static class Program {
         srcEntity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
         srcEntity.Set(new Marker());
 
-        var asd = Entities.WorldData[Worlds.DefaultWorld.Index].EntityComponentMasks[srcEntity.Index];
-
-        Console.WriteLine(asd.ToString());
+        // var asd = Entities.WorldData[Worlds.DefaultWorld.Index].EntityComponentMasks[srcEntity.Index];
+        //
+        // Console.WriteLine(asd.ToString());
 
         while (!WindowShouldClose()) {
 
