@@ -20,7 +20,7 @@ public readonly struct ComponentRemovedSignal<T>() : ISignal where T : struct, I
     }
 }
 
-public readonly struct EntityCreatedSignal<T>() : ISignal where T : struct {
+public readonly struct EntityCreatedSignal() : ISignal {
     public readonly Entity Entity;
 
     public EntityCreatedSignal(Entity entity) : this() {
@@ -28,7 +28,7 @@ public readonly struct EntityCreatedSignal<T>() : ISignal where T : struct {
     }
 }
 
-public readonly struct EntityDestroyedSignal<T>() : ISignal where T : struct {
+public readonly struct EntityDestroyedSignal() : ISignal {
     public readonly Entity Entity;
 
     public EntityDestroyedSignal(Entity entity) : this() {

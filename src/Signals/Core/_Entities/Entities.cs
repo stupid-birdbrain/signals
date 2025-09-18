@@ -42,7 +42,7 @@ internal static partial class Entities {
         WorldData = Array.Empty<UniqueWorldData>();
     }
 
-    public static Entity Create(uint worldIndex) {
+    public static Entity Create(uint worldIndex, bool silent = false) {
         uint index;
 
         EnsureWorldCapacity(worldIndex);
@@ -82,32 +82,48 @@ internal static partial class Entities {
 
         worldData.EntityGenerations[index] = version;
         worldData.EntityPresenceMasks.Set((int)index);
-
-        return new Entity(index, worldData.EntityGenerations[index], worldIndex);
+        
+        var entity = new Entity(index, worldData.EntityGenerations[index], worldIndex);
+        
+        if(silent = false) {
+            Signals.SendMessage(worldIndex, new EntityCreatedSignal(entity));
+        }
+        
+        return entity;
     }
     
-    public static bool Destroy(uint worldId, uint entityId) {
-        if(worldId >= WorldData.Length)
+    public static bool Destroy(uint worldIndex, uint entityIndex, bool silent = false) {
+        if(worldIndex >= WorldData.Length)
             return false;
 
-        ref var worldData = ref WorldData[worldId];
+        ref var worldData = ref WorldData[worldIndex];
 
-        if(entityId >= worldData.EntityGenerations.Length)
+        if(entityIndex >= worldData.EntityGenerations.Length)
             return false;
         
-        var startOffset = (int)(entityId * Components.ComponentMasksPerEntity);
+        var entityToDestroy = new Entity(entityIndex, worldData.EntityGenerations[entityIndex], worldIndex);
+        
+        if (!IsValid(worldIndex, entityToDestroy)) {
+            return false;
+        }
+
+        if(silent = false) {
+            Signals.SendMessage(worldIndex, new EntityCreatedSignal(entityToDestroy));
+        }
+        
+        var startOffset = (int)(entityIndex * Components.ComponentMasksPerEntity);
         for (int i = 0; i < Components.ComponentMasksPerEntity; i++) {
             worldData.EntityComponentMasks[startOffset + i] = global::Signals.BitSet<ulong>.Zero;
         }
 
-        ref var entityData = ref worldData.EntityGenerations[entityId];
+        ref var entityData = ref worldData.EntityGenerations[entityIndex];
 
-        worldData.EntityGenerations[entityId] = worldData.EntityGenerations[entityId] + 1;
-        if (worldData.EntityGenerations[entityId] == 0)
-            worldData.EntityGenerations[entityId] = 1;
+        worldData.EntityGenerations[entityIndex] = worldData.EntityGenerations[entityIndex] + 1;
+        if (worldData.EntityGenerations[entityIndex] == 0)
+            worldData.EntityGenerations[entityIndex] = 1;
 
-        worldData.EntityPresenceMasks.Unset((int)entityId);
-        worldData.FreeEntityIndices.Add((int)entityId);
+        worldData.EntityPresenceMasks.Unset((int)entityIndex);
+        worldData.FreeEntityIndices.Add((int)entityIndex);
 
         return true;
     }
