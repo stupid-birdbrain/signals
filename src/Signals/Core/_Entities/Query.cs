@@ -8,13 +8,7 @@ public unsafe readonly struct Query(uint worldId) {
     internal readonly BitmaskArray256 _requiredComponents = new();
     internal readonly BitmaskArray256 _excludedComponents = new();
 
-    internal Query(
-        uint worldId,
-        BitmaskArray256 requiredMask,
-        BitmaskArray256 excludedMask
-    )
-        : this(worldId)
-    {
+    internal Query(uint worldId, BitmaskArray256 requiredMask, BitmaskArray256 excludedMask) : this(worldId) {
         _worldId = worldId;
         _requiredComponents = requiredMask;
         _excludedComponents = excludedMask;
@@ -27,14 +21,16 @@ public unsafe readonly struct Query(uint worldId) {
         return new Query(_worldId, newRequired, _excludedComponents);
     }
 
-    public Query Without<T>() where T : struct, IComponent => new Query(_worldId,
-        _requiredComponents,
-        _excludedComponents.CloneAndSet((int)Components.GetComponentIndex<T>()));
+    public Query Without<T>() where T : struct, IComponent => new Query(_worldId, _requiredComponents, _excludedComponents.CloneAndSet((int)Components.GetComponentIndex<T>()));
 
-    public Iterator Iterate() => new Iterator(this);
+    public Iterator Iterate() {
+        Entities.EnsureWorldCapacity(_worldId);
+        return new Iterator(this);
+    }
 
 #pragma warning disable CS8500
-    public ref struct Iterator {
+    public ref struct Iterator
+    {
         private readonly uint _worldId;
         private readonly ReadOnlySpan<Bitset256> _requiredComponentsSpan;
         private readonly ReadOnlySpan<Bitset256> _excludedComponentsSpan;
@@ -42,7 +38,7 @@ public unsafe readonly struct Query(uint worldId) {
         private readonly Entities.UniqueWorldData* _worldData;
 
         private int _currentPresenceMaskArrayIndex;
-        private BitSet<ulong> _currentPresenceBitSet;
+        private Bitset256 _currentPresenceBitset256;
 
         public Iterator(Query query) {
             _worldId = query._worldId;
@@ -53,7 +49,7 @@ public unsafe readonly struct Query(uint worldId) {
                 _worldData = ptr;
 
             _currentPresenceMaskArrayIndex = -1;
-            _currentPresenceBitSet = BitSet<ulong>.Zero;
+            _currentPresenceBitset256 = Bitset256.Zero;
         }
 
         public Entity? Next() {
@@ -75,23 +71,22 @@ public unsafe readonly struct Query(uint worldId) {
             bool hasExcludedMask = !excludedSpan.IsEmpty;
 
             while (true) {
-                if (_currentPresenceBitSet.IsZero) {
+                if (_currentPresenceBitset256.IsZero) {
                     _currentPresenceMaskArrayIndex++;
-                    if (_currentPresenceMaskArrayIndex >= liveEntityPresenceMasksArray.Length) {
+                    if (liveEntityPresenceMasksArray is null || _currentPresenceMaskArrayIndex >= liveEntityPresenceMasksArray.Length)
+                    {
                         return null;
                     }
-                    _currentPresenceBitSet = liveEntityPresenceMasksArray[_currentPresenceMaskArrayIndex];
-                    if (_currentPresenceBitSet.IsZero) {
+                    _currentPresenceBitset256 = liveEntityPresenceMasksArray[_currentPresenceMaskArrayIndex];
+                    if (_currentPresenceBitset256.IsZero) {
                         continue;
                     }
                 }
 
-                int bitInCurrentMask = _currentPresenceBitSet.TrailingZeroCount();
-                _currentPresenceBitSet.Unset(bitInCurrentMask);
+                int bitInCurrentMask = _currentPresenceBitset256.FirstSetBit();
+                _currentPresenceBitset256.Clear(bitInCurrentMask);
 
-                uint entityId = (uint)(_currentPresenceMaskArrayIndex *
-                    BitSet<ulong>.BitSize +
-                    bitInCurrentMask);
+                uint entityId = (uint)(_currentPresenceMaskArrayIndex * Bitset256.CAPACITY + bitInCurrentMask);
 
                 if (entityId >= liveWorldGenerationsLength) {
                     continue;
