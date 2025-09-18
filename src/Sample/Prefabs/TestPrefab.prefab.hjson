@@ -7,11 +7,9 @@
 
 Velocity: { 
     Value: {
-        X: 2
+        X: 0
         Y: 0
     }
 }
 
-TestComponent: {
-    Data: 10
-}
+Controllable: { }
