@@ -108,7 +108,7 @@ internal static partial class Entities {
         }
 
         if(silent = false) {
-            Signals.SendMessage(worldIndex, new EntityCreatedSignal(entityToDestroy));
+            Signals.SendMessage(worldIndex, new EntityDestroyedSignal(entityToDestroy));
         }
         
         var startOffset = (int)(entityIndex * Components.ComponentMasksPerEntity);

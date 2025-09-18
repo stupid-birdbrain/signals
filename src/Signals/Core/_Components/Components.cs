@@ -196,7 +196,11 @@ public partial class Components {
         Signals.SendMessage(entity.WorldIndex, new ComponentAddedSignal<T>(entity, value));
         
         ref var sparseSet = ref EntityComponentData<T>.WorldEntityData[entity.WorldIndex].SparseSet;
-        return ref sparseSet.Add(entity.Index, in value);
+        ref T newVal = ref sparseSet.Add(entity.Index, in value);
+        
+        Signals.SendMessage(entity.WorldIndex, new ComponentAddedSignal<T>(entity, newVal));
+        
+        return ref newVal;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -221,8 +225,6 @@ public partial class Components {
         }
         
         Signals.SendMessage(entity.WorldIndex, new ComponentRemovedSignal<T>(entity, removedComponentValue));
-
-        sparseSet.Remove(entity.Index);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
