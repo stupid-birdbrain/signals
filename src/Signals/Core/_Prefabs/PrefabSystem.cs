@@ -25,10 +25,10 @@ public readonly struct Prefab {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has<T>() where T : struct, IComponent => Components.HasComponent<T>(Entity);
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly T Get<T>() where T : struct, IComponent => ref Components.GetComponent<T>(Entity);
+    public ref T Get<T>() where T : struct, IComponent => ref Components.GetComponent<T>(Entity);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly T Set<T>(in T value) where T : struct, IComponent => ref Components.SetComponent<T>(Entity, value);
+    public ref T Set<T>(in T value) where T : struct, IComponent => ref Components.SetComponent<T>(Entity, value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static implicit operator Entity(Prefab prefab) => prefab.Entity;
@@ -36,6 +36,7 @@ public readonly struct Prefab {
 
 public static class Prefabs {
     private static readonly Dictionary<string, Prefab> prefabsByIdentifier = new();
+    private static readonly Dictionary<uint, Prefab> prefabs_by_index = [];
     private static uint _prefabWorldId;
 
     internal static Entity CreatePrefabEntity(string identifier) {
@@ -45,12 +46,15 @@ public static class Prefabs {
         });
         return entity;
     }
+    
+    public static Query Query() => new Query().With<PrefabInfo>();
 
     public static void RegisterPrefab(string identifier, Prefab prefab) {
         if (prefabsByIdentifier.ContainsKey(identifier)) {
             throw new InvalidOperationException($"Prefab with identifier '{identifier}' already registered.");
         }
         prefabsByIdentifier[identifier] = prefab;
+        prefabs_by_index[prefab.Entity.Index] = prefab;
     }
 
     public static Prefab GetPrefab(string identifier) {
@@ -59,11 +63,15 @@ public static class Prefabs {
         }
         return Prefab.Invalid;
     }
+    
+    public static Prefab GetPrefabByIndex(uint index) => prefabs_by_index[index];
+    public static bool TryGetPrefabByIndex(uint index, out Prefab prefab) => prefabs_by_index.TryGetValue(index, out prefab);
 
     public static bool TryGetPrefab(string identifier, [NotNullWhen(true)] out Prefab prefab) {
         return prefabsByIdentifier.TryGetValue(identifier, out prefab);
     }
-    public static Entity Create(Prefab prefab, uint targetWorldId) {
+    
+    public static Entity Create(Prefab prefab, uint targetWorldId, Action<Entity> createAction = null) {
         if (!prefab.IsValid) {
             return Entity.Invalid;
         }
@@ -94,6 +102,8 @@ public static class Prefabs {
             }
         }
 
+        if(createAction != null) createAction.Invoke(newEntity);
+        
         return newEntity;
     }
 
@@ -138,8 +148,7 @@ public sealed class PrefabLoading {
 #endif
         List<Exception>? errors = null;
 
-        foreach(string fullFilePath in Directory.EnumerateFiles(assemblyPath!, $"*{extension}",
-                    SearchOption.AllDirectories)) {
+        foreach(string fullFilePath in Directory.EnumerateFiles(assemblyPath!, $"*{extension}", SearchOption.AllDirectories)) {
             string identifier = Path.GetFileNameWithoutExtension(fullFilePath);
             if(identifier.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase)) {
                 identifier = Path.GetFileNameWithoutExtension(identifier);
