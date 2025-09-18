@@ -1,6 +1,7 @@
 ﻿using Hjson;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Standard;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -47,7 +48,7 @@ public static class Prefabs {
         return entity;
     }
     
-    public static Query Query() => new Query().With<PrefabInfo>();
+    public static Query Query() => new Query(Worlds.PrefabWorld.Index).With<PrefabInfo>();
 
     public static void RegisterPrefab(string identifier, Prefab prefab) {
         if (prefabsByIdentifier.ContainsKey(identifier)) {
@@ -111,12 +112,17 @@ public static class Prefabs {
 
 public sealed class PrefabLoading {
     private static readonly string extension = ".prefab.hjson";
-    private static readonly JsonSerializer jsonSerializer = new();
-    private static readonly HashSet<Type> jsonConverterTypes = new();
+    
+    private static readonly JsonSerializer _deserializer = new JsonSerializer(); 
+    private static readonly HashSet<Type> _registeredConverterTypes = new();
 
+    static PrefabLoading() {
+        RegisterJsonConverter(new Vector2UShortJsonConverter());
+    }
+    
     public static void RegisterJsonConverter(JsonConverter converter) {
-        if(jsonConverterTypes.Add(converter.GetType())) {
-            jsonSerializer.Converters.Add(converter);
+        if(_registeredConverterTypes.Add(converter.GetType())) {
+            _deserializer.Converters.Add(converter);
         }
     }
 
@@ -131,6 +137,7 @@ public sealed class PrefabLoading {
     public static void LoadAllPrefabs(Assembly assembly) {
         RegisterComponentTypesFromAssembly(assembly);
         RegisterComponentTypesFromAssembly(typeof(IComponent).Assembly);
+        RegisterComponentTypesFromAssembly(typeof(Vector2UShort).Assembly);
 
         string? assemblyPath = assembly.Location;
 
@@ -158,10 +165,16 @@ public sealed class PrefabLoading {
             string standardJsonString = HjsonValue.Parse(hjsonText).ToString(Stringify.Plain);
 
             try {
-                var prefabHandle = JsonConvert.DeserializeObject<Prefab>(standardJsonString);
-                prefabHandle.Set(new PrefabInfo { Identifier = identifier });
-                Prefabs.RegisterPrefab(identifier, prefabHandle);
+                using (var stringReader = new StringReader(standardJsonString))
+                using (var jsonReader = new JsonTextReader(stringReader))
+                {
+                    var prefabHandle = _deserializer.Deserialize<Prefab>(jsonReader);
 
+                    if (!prefabHandle.Has<PrefabInfo>()) {
+                        prefabHandle.Set(new PrefabInfo { Identifier = identifier });
+                    }
+                    Prefabs.RegisterPrefab(identifier, prefabHandle);
+                }
 
 #if DEBUG
                 Console.WriteLine($"Successfully loaded prefab: {identifier}");
@@ -182,35 +195,29 @@ public sealed class PrefabLoading {
 internal sealed class PrefabJsonConverter : JsonConverter {
     public override bool CanConvert(Type objectType) => objectType == typeof(Prefab) || objectType == typeof(Entity);
 
-    public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) => throw new NotImplementedException("asd");
+    public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) => throw new NotImplementedException("Writing prefabs not implemented.");
+    
+    private static readonly MethodInfo ComponentsSetMethod = typeof(Components).GetMethod(nameof(Components.SetComponent), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
 
-    public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) {
+    public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) {
         if (reader.TokenType == JsonToken.String) {
-            string? identifier = reader.Value?.ToString();
-            if (identifier != null && Prefabs.TryGetPrefab(identifier, out var prefab)) {
-                if (objectType == typeof(Entity)) {
-                    return Prefabs.Create(prefab, Worlds.PrefabWorld.Index);
-                }
-                return prefab;
-            }
-            throw new JsonSerializationException($"prefab with identifier '{identifier}' not found.");
         }
         else if (reader.TokenType == JsonToken.StartObject) {
             var jobj = JObject.Load(reader);
             var tempEntity = Entities.Create(Worlds.PrefabWorld.Index);
+            
             ReadComponentsIntoEntity(tempEntity, jobj, serializer);
 
             if (objectType == typeof(Prefab)) {
                 return new Prefab(tempEntity);
             }
             else if (objectType == typeof(Entity)) {
-                return tempEntity;
+                return tempEntity; 
             }
         }
 
         throw new JsonSerializationException($"unexpected token type {reader.TokenType} when reading prefab.");
     }
-
     internal static void ReadComponentsIntoEntity(Entity entity, JObject jObject, JsonSerializer serializer) {
         object?[] paramArray = new object?[2];
         foreach (var pair in jObject) {
@@ -223,8 +230,8 @@ internal sealed class PrefabJsonConverter : JsonConverter {
 
             paramArray[0] = entity;
             paramArray[1] = jsonElement!.ToObject(componentType, serializer);
-
-            var setMethod = typeof(Components).GetMethod(nameof(Components.SetComponent), BindingFlags.Static | BindingFlags.NonPublic).MakeGenericMethod(componentType);
+            
+            var setMethod = ComponentsSetMethod.MakeGenericMethod(componentType);
             setMethod.Invoke(null, paramArray);
         }
     }

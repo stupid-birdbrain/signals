@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Signals.Core;
@@ -96,6 +97,12 @@ public partial class Components {
     
     public static void RegisterComponent(Type type)
         => RuntimeHelpers.RunClassConstructor(typeof(EntityComponentData<>).MakeGenericType(type).TypeHandle);
+    
+    public static void RegisterTypesFromAssembly(Assembly assembly) {
+        foreach (var type in assembly.GetTypes().Where(t => !t.IsAbstract && typeof(IComponent).IsAssignableFrom(t))) {
+            RegisterComponent(type);
+        }
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static Handle GetComponentHandle<T>() where T : struct, IComponent
