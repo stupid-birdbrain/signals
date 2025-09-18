@@ -193,6 +193,8 @@ public partial class Components {
         }
         entityComponentMaskSpan[div].Set((int)rem); 
 
+        Signals.SendMessage(entity.WorldIndex, new ComponentAddedSignal<T>(entity, value));
+        
         ref var sparseSet = ref EntityComponentData<T>.WorldEntityData[entity.WorldIndex].SparseSet;
         return ref sparseSet.Add(entity.Index, in value);
     }
@@ -208,13 +210,17 @@ public partial class Components {
 
         if (entity.WorldIndex >= EntityComponentData<T>.WorldEntityData.Length) return;
         ref var sparseSet = ref EntityComponentData<T>.WorldEntityData[entity.WorldIndex].SparseSet;
-        if (!sparseSet.Has(entity.Index)) return; 
+        if (!sparseSet.Has(entity.Index)) return;
+
+        var removedComponentValue = sparseSet.Remove(entity.Index);
 
         var entityComponentMaskSpan = GetEntityComponentMaskSpan(entity.WorldIndex, entity.Index);
         var (div, rem) = Math.DivRem((int)componentId, BitSet<ulong>.BitSize);
         if (div < entityComponentMaskSpan.Length) {
             entityComponentMaskSpan[div].Unset((int)rem);
         }
+        
+        Signals.SendMessage(entity.WorldIndex, new ComponentRemovedSignal<T>(entity, removedComponentValue));
 
         sparseSet.Remove(entity.Index);
     }
