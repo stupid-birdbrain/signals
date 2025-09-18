@@ -80,7 +80,9 @@ public static class Program {
 
             foreach (ref readonly var msg in Worlds.DefaultWorld.Read<ComponentAddedSignal<Marker>>()) {
                 Console.WriteLine(msg.Value);
-                //Console.WriteLine(Entities.WorldData[Worlds.DefaultWorld.Index].EntityComponentMasks[msg.Entity.Index].Value);
+                
+                var asd = Entities.WorldData[Worlds.DefaultWorld.Index].EntityComponentMasks[msg.Entity.Index];
+                Console.WriteLine(asd.ToString());
             }
             
             var query = world.Query().With<Transform2D>().With<Velocity>().Iterate();
