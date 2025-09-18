@@ -27,7 +27,7 @@ internal struct TestComponent : IComponent
     public int Data;
 }
 
-internal struct Marker : IComponent;
+internal struct Controllable : IComponent;
 
 public static class Program {
     public static void Main() {
@@ -68,20 +68,17 @@ public static class Program {
         //     entity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
         // }
         //
-        var srcEntity = world.Create();
-        srcEntity.Set(new Transform2D() { Position = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
-        srcEntity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
+        // var srcEntity = world.Create();
+        // srcEntity.Set(new Transform2D() { Position = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
+        // srcEntity.Set(new Velocity() { Value = new Vector2(Random.Shared.Next(-5, 5), Random.Shared.Next(-5, 5)) });
+        //srcEntity.Set(new Controllable());
 
+        var controllerPrefab = Prefabs.GetPrefab("TestPrefab");
+        Prefabs.Create(controllerPrefab, Worlds.DefaultWorld.Index);
+
+        var moveDir = Vector2.Zero;
+        
         while (!WindowShouldClose()) {
-            
-            if (IsKeyDown(KeyboardKey.A)) {
-                srcEntity.Set(new Marker());
-            }
-
-            foreach (ref readonly var msg in Worlds.DefaultWorld.Read<ComponentAddedSignal<Marker>>()) {
-                Console.WriteLine(msg.Value);
-                Console.WriteLine(Entities.WorldData[Worlds.DefaultWorld.Index].EntityComponentMasks[msg.Entity.Index].Value);
-            }
             
             var query = world.Query().With<Transform2D>().With<Velocity>().Iterate();
             while (query.Next() is { } entity) {
@@ -89,6 +86,30 @@ public static class Program {
                 ref var vel = ref entity.Get<Velocity>();
                 
                 pos.Position += vel.Value * GetFrameTime();
+            }
+            
+            if(IsKeyPressed(KeyboardKey.W)) {
+                moveDir.Y -= 1;
+            }
+            if(IsKeyPressed(KeyboardKey.S)) {
+                moveDir.Y += 1;
+            }
+            if(IsKeyPressed(KeyboardKey.A)) {
+                moveDir.X -= 1;
+            }
+            if(IsKeyPressed(KeyboardKey.D)) {
+                moveDir.X += 1;
+            }
+
+            if(moveDir.LengthSquared() > 0) {
+                moveDir = Vector2.Normalize(moveDir);
+            }
+            
+            var playerQuery = world.Query().With<Controllable>().With<Velocity>().Iterate();
+            while (playerQuery.Next() is { } player) {
+                ref var velocity = ref player.Get<Velocity>();
+                
+                velocity.Value += moveDir * 111.0f * GetFrameTime();
             }
             
             #region drawing
@@ -101,8 +122,14 @@ public static class Program {
                 var entityquery = wld.Query().With<Transform2D>().Iterate();
                 while (entityquery.Next() is { } entity) {
                     ref var pos = ref entity.Get<Transform2D>();
+
+                    var color = Color.White;
+                    if (entity.Has<Controllable>())
+                    {
+                        color = Color.Red;
+                    }
                     
-                    DrawRectangleV(pos.Position, new Vector2(10, 10), Color.White);
+                    DrawRectangleV(pos.Position, new Vector2(10, 10), color);
                 }
             }
             

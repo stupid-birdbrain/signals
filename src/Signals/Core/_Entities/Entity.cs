@@ -20,24 +20,13 @@ public readonly struct Entity {
         WorldIndex = worldIndex;
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has<T>() where T : struct, IComponent => Components.HasComponent<T>(this);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool Has<T>() where T : struct, IComponent => Components.HasComponent<T>(this);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public ref T Get<T>() where T : struct, IComponent => ref Components.GetComponent<T>(this);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public ref T Set<T>(in T value) where T : struct, IComponent => ref Components.SetComponent(this, in value);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public void Remove<T>() where T : struct, IComponent => Components.RemoveComponent<T>(this);
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get<T>() where T : struct, IComponent => ref Components.GetComponent<T>(this);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool HasAny(ReadOnlySpan<Bitset256> span) => Components.HasAnyComponents(this, span);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public bool HasAll(ReadOnlySpan<Bitset256> span) => Components.HasAllComponents(this, span);
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Set<T>(in T value) where T : struct, IComponent => ref Components.SetComponent(this, in value);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Remove<T>() where T : struct, IComponent => Components.RemoveComponent<T>(this);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void HasAny(ReadOnlySpan<BitSet<ulong>> span) => Components.HasAnyComponents(this, span);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void HasAll(ReadOnlySpan<BitSet<ulong>> span) => Components.HasAllComponents(this, span);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool Destroy() => Entities.Destroy(WorldIndex, Index);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public readonly bool Destroy() => Entities.Destroy(WorldIndex, Index);
 }
