@@ -106,11 +106,11 @@ public partial class Components {
         => EntityComponentData<T>.Handle.Id;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void EnsureComponentWorldDataCapacity<T>(uint worldId) where T : struct, IComponent {
+    internal static void EnsureComponentWorldDataCapacity<T>(uint worldIndex) where T : struct, IComponent {
         ref var worldComponentDatas = ref EntityComponentData<T>.WorldEntityData;
-        if (worldId >= worldComponentDatas.Length) {
+        if (worldIndex >= worldComponentDatas.Length) {
             int oldLength = worldComponentDatas.Length;
-            int newLength = (int)BitOperations.RoundUpToPowerOf2(worldId + 1);
+            int newLength = (int)BitOperations.RoundUpToPowerOf2(worldIndex + 1);
             Array.Resize(ref worldComponentDatas, newLength);
             
             for (int i = oldLength; i < newLength; i++) {
@@ -120,9 +120,9 @@ public partial class Components {
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void EnsureWorldEntityComponentMaskCapacity(uint worldId, uint entityIndex) {
-        Entities.EnsureWorldCapacity(worldId); 
-        ref var worldData = ref Entities.WorldData[worldId];
+    internal static void EnsureWorldEntityComponentMaskCapacity(uint worldIndex, uint entityIndex) {
+        Entities.EnsureWorldCapacity(worldIndex); 
+        ref var worldData = ref Entities.WorldData[worldIndex];
 
         uint requiredFlatMasksLength = (entityIndex + 1) * ComponentMasksPerEntity;
         if (requiredFlatMasksLength > worldData.EntityComponentMasks.Length) {
@@ -141,12 +141,8 @@ public partial class Components {
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static Span<Bitset256> GetEntityComponentMaskSpan(
-        uint worldId,
-        uint entityIndex
-    )
-    {
-        ref var worldData = ref Entities.WorldData[worldId];
+    internal static Span<Bitset256> GetEntityComponentMaskSpan(uint worldIndex, uint entityIndex) {
+        ref var worldData = ref Entities.WorldData[worldIndex];
         var startOffset = (int)(entityIndex * ComponentMasksPerEntity);
         return new Span<Bitset256>(worldData.EntityComponentMasks, startOffset,
             (int)ComponentMasksPerEntity);
@@ -154,10 +150,8 @@ public partial class Components {
     
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static bool HasComponent<T>(Entity entity) where T : struct, IComponent
-    {
-        if (!entity.Valid)
-        {
+    internal static bool HasComponent<T>(Entity entity) where T : struct, IComponent {
+        if (!entity.Valid) {
             return false;
         }
 
@@ -205,7 +199,6 @@ public partial class Components {
         ref var sparseSet = ref EntityComponentData<T>.WorldEntityData[entity.WorldIndex].SparseSet;
         return ref sparseSet.Add(entity.Index, in value);
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void RemoveComponent<T>(Entity entity) where T : struct, IComponent {

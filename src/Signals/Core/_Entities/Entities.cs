@@ -48,8 +48,7 @@ public static partial class Entities {
             ? freeIndex
             : worldData.NextEntityIndex++);
 
-        if (index >= worldData.EntityGenerations.Length)
-        {
+        if (index >= worldData.EntityGenerations.Length) {
             int oldSize = worldData.EntityGenerations.Length;
             int newSize = Math.Max(1, oldSize); // ensure minimum size of 1 if oldSize was 0
             while (newSize <= index)
