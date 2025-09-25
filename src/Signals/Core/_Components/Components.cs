@@ -87,7 +87,7 @@ public partial class Components {
             _componentNameToHandle[typeof(T).Name] = handle;
             _componentHandleToType[handle] = typeof(T);
 
-            uint newMasksPerEntityNeeded = (handle.Id / (uint)BitSet<ulong>.BitSize) + 1;
+            uint newMasksPerEntityNeeded = (handle.Id / (uint)Bitset256.CAPACITY) + 1;
             if (newMasksPerEntityNeeded > ComponentMasksPerEntity) {
                 ComponentMasksPerEntity = newMasksPerEntityNeeded;
             }
@@ -169,7 +169,7 @@ public partial class Components {
         var entityComponentMaskSpan =
             GetEntityComponentMaskSpan(entity.WorldIndex, entity.Index);
 
-        var (div, rem) = Math.DivRem((int)componentId, Bitset256.CAPACITY);
+        var (div, rem) = Math.DivRem((int)componentId, Bitset256.CAPACITY); 
         return div < entityComponentMaskSpan.Length &&
                entityComponentMaskSpan[div].IsSet(rem);
     }
@@ -197,12 +197,14 @@ public partial class Components {
         EnsureWorldEntityComponentMaskCapacity(entity.WorldIndex, entity.Index);
 
         var entityComponentMaskSpan = GetEntityComponentMaskSpan(entity.WorldIndex, entity.Index);
-        var (div, rem) = Math.DivRem((int)componentId, BitSet<ulong>.BitSize);
+        var (div, rem) = Math.DivRem((int)componentId, Bitset256.CAPACITY);
         
         if (div >= entityComponentMaskSpan.Length) { 
              throw new IndexOutOfRangeException($"component {componentId} is too large for mask. mask length: {entityComponentMaskSpan.Length}");
         }
-        entityComponentMaskSpan[div].Set((int)rem); 
+        
+        ref Bitset256 mask = ref entityComponentMaskSpan[div];
+        mask.Set((int)rem);
 
         Signals.SendMessage(entity.WorldIndex, new ComponentAddedSignal<T>(entity, value));
         
@@ -230,9 +232,10 @@ public partial class Components {
         var removedComponentValue = sparseSet.Remove(entity.Index);
 
         var entityComponentMaskSpan = GetEntityComponentMaskSpan(entity.WorldIndex, entity.Index);
-        var (div, rem) = Math.DivRem((int)componentId, BitSet<ulong>.BitSize);
+        var (div, rem) = Math.DivRem((int)componentId, Bitset256.CAPACITY);
         if (div < entityComponentMaskSpan.Length) {
-            entityComponentMaskSpan[div].Clear((int)rem);
+            ref Bitset256 mask = ref entityComponentMaskSpan[div];
+            mask.Clear((int)rem);
         }
         
         Signals.SendMessage(entity.WorldIndex, new ComponentRemovedSignal<T>(entity, removedComponentValue));

@@ -2,20 +2,19 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Numerics;
-using Signals;
 
 namespace Signals.Core;
 
 public readonly struct WorldQuery {
-    private readonly BitArray<ulong> _requiredComponents;
-    private readonly BitArray<ulong> _excludedComponents;
+    private readonly BitmaskArray256 _requiredComponents;
+    private readonly BitmaskArray256 _excludedComponents;
 
     public WorldQuery() {
-        _requiredComponents = new BitArray<ulong>();
-        _excludedComponents = new BitArray<ulong>();
+        _requiredComponents = new BitmaskArray256();
+        _excludedComponents = new BitmaskArray256();
     }
 
-    private WorldQuery(BitArray<ulong> requiredMask, BitArray<ulong> excludedMask) {
+    private WorldQuery(BitmaskArray256 requiredMask, BitmaskArray256 excludedMask) {
         _requiredComponents = requiredMask;
         _excludedComponents = excludedMask;
     }
@@ -26,7 +25,7 @@ public readonly struct WorldQuery {
             throw new InvalidOperationException($"component type {typeof(T).Name} is not registered.");
         }
 
-        var newRequired = _requiredComponents.Clone((int)componentId);
+        var newRequired = _requiredComponents.CloneAndSet((int)componentId);
 
         return new WorldQuery(newRequired, _excludedComponents);
     }
@@ -37,18 +36,19 @@ public readonly struct WorldQuery {
             throw new InvalidOperationException($"component type {typeof(T).Name} is not registered.");
         }
 
-        var newExcluded = _excludedComponents.Clone((int)componentId);
+        var newExcluded = _excludedComponents.CloneAndSet((int)componentId);
 
         return new WorldQuery(_requiredComponents, newExcluded);
     }
 
     public Iterator Iterate() {
+        Entities.EnsureWorldCapacity((uint)Worlds.WorldCount);
         return new Iterator(this);
     }
 
     public ref struct Iterator {
-        private readonly ReadOnlySpan<BitSet<ulong>> _requiredComponentsSpan;
-        private readonly ReadOnlySpan<BitSet<ulong>> _excludedComponentsSpan;
+        private readonly ReadOnlySpan<Bitset256> _requiredComponentsSpan;
+        private readonly ReadOnlySpan<Bitset256> _excludedComponentsSpan;
 
         private int _currentWorldIndex;
 
@@ -56,8 +56,8 @@ public readonly struct WorldQuery {
         private readonly bool _hasExcludedMask;
         
         public Iterator(WorldQuery query) {
-            _requiredComponentsSpan = query._requiredComponents.Array;
-            _excludedComponentsSpan = query._excludedComponents.Array;
+            _requiredComponentsSpan = query._requiredComponents.AsSpan(); 
+            _excludedComponentsSpan = query._excludedComponents.AsSpan();
 
             _hasRequiredMask = !_requiredComponentsSpan.IsEmpty;
             _hasExcludedMask = !_excludedComponentsSpan.IsEmpty;
@@ -72,7 +72,6 @@ public readonly struct WorldQuery {
 
             while (true) {
                 _currentWorldIndex++;
-
                 // check against the current world count
                 if (_currentWorldIndex >= liveWorldCount) {
                     return null;

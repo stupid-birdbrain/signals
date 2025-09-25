@@ -78,6 +78,10 @@ public static class Program {
 
         var moveDir = Vector2.Zero;
         
+        world.Set(new Controllable());
+        
+        Console.Write(world.Has<Controllable>());
+        
         while (!WindowShouldClose()) {
             
             var query = world.Query().With<Transform2D>().With<Velocity>().Iterate();

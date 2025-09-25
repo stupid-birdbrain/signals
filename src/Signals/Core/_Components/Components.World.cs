@@ -66,15 +66,15 @@ partial class Components {
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasAllWorldComponents(uint worldId, ReadOnlySpan<BitSet<ulong>> requiredMaskSpan) {
+    public static bool HasAllWorldComponents(uint worldId, ReadOnlySpan<Bitset256> requiredMaskSpan) {
         if (requiredMaskSpan.IsEmpty) return true; 
-        
-        for (int i = 0; i < requiredMaskSpan.Length; i++) {
-            var requiredBitSet = requiredMaskSpan[i];
-            if (requiredBitSet.IsZero) continue;
 
-            foreach (int bitIndex in requiredBitSet) {
-                uint componentId = (uint)(i * BitSet<ulong>.BitSize + bitIndex);
+        for (int i = 0; i < requiredMaskSpan.Length; i++) {
+            ref readonly var requiredBitset = ref requiredMaskSpan[i];
+            if (requiredBitset.IsZero) continue;
+
+            foreach (int bitIndex in requiredBitset) {
+                uint componentId = (uint)(i * Bitset256.CAPACITY + bitIndex);
                 if (!HasWorldComponent(componentId, worldId)) {
                     return false;
                 }
@@ -82,17 +82,17 @@ partial class Components {
         }
         return true;
     }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasAnyWorldComponents(uint worldId, ReadOnlySpan<BitSet<ulong>> queryMaskSpan) {
+    public static bool HasAnyWorldComponents(uint worldId, ReadOnlySpan<Bitset256> queryMaskSpan) {
         if (queryMaskSpan.IsEmpty) return false;
 
+        //lol
         for (int i = 0; i < queryMaskSpan.Length; i++) {
-            var queryBitSet = queryMaskSpan[i];
-            if (queryBitSet.IsZero) continue;
+            ref readonly var queryBitset = ref queryMaskSpan[i];
+            if (queryBitset.IsZero) continue;
 
-            foreach (int bitIndex in queryBitSet) {
-                uint componentId = (uint)(i * BitSet<ulong>.BitSize + bitIndex);
+            foreach (int bitIndex in queryBitset) {
+                uint componentId = (uint)(i * Bitset256.CAPACITY + bitIndex);
                 if (HasWorldComponent(componentId, worldId)) {
                     return true;
                 }
