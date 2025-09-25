@@ -19,6 +19,9 @@
       <None Update="Prefabs\TestPrefab.prefab.hjson">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <None Update="Prefabs\TestPrefabYaml.prefab.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

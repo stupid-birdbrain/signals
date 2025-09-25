@@ -1,6 +1,6 @@
-﻿﻿﻿using JetBrains.Annotations;
-  using Standard;
-  using System.Collections.Concurrent;
+﻿using JetBrains.Annotations;
+using Standard;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System;
 
