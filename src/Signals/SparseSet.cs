@@ -5,37 +5,37 @@ namespace Signals;
 
 public struct SparseSet<TData>() where TData : struct {
     private const int invalid_data = -1;
-    
+
     private int[] _sparse = Array.Empty<int>();
     private TData[] _dense = Array.Empty<TData>();
-    
+
     public readonly Span<int> Sparse => _sparse;
     public readonly Span<TData> Dense => _dense;
-    
+
     public int Count { get; private set; }
 
     public ref TData this[int index] {
         get {
-            if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "index cannot be negative!");
+            if(index < 0) throw new ArgumentOutOfRangeException(nameof(index), "index cannot be negative!");
             return ref Get((uint)index);
         }
     }
-    
+
     public SparseSet(int sparseAmount, int denseAmount) : this() {
         _sparse = sparseAmount > 0 ? new int[sparseAmount] : Array.Empty<int>();
         _dense = denseAmount > 0 ? new TData[denseAmount] : Array.Empty<TData>();
-        
-        for (int i = 0; i < _sparse.Length; i++)
+
+        for(int i = 0; i < _sparse.Length; i++)
             _sparse[i] = invalid_data;
 
         Count = 0;
     }
-    
-    public readonly bool Has(uint index) 
+
+    public readonly bool Has(uint index)
         => index < _sparse.Length && _sparse[index] != invalid_data;
-    
+
     public readonly ref TData Get(uint index) {
-        if (!Has(index)) {
+        if(!Has(index)) {
             throw new InvalidOperationException($"element at index {index} does not exist in the sparse set!");
         }
         return ref _dense[_sparse[index]];
@@ -43,19 +43,19 @@ public struct SparseSet<TData>() where TData : struct {
 
     public ref TData Add(uint index, in TData data) {
         checked {
-            if (index >= _sparse.Length) {
+            if(index >= _sparse.Length) {
                 var oldLength = _sparse.Length;
                 var newLength = (int)BitOperations.RoundUpToPowerOf2((index + 1));
                 Array.Resize(ref _sparse, newLength);
-                for (int i = oldLength; i < newLength; i++) 
+                for(int i = oldLength; i < newLength; i++)
                     _sparse[i] = invalid_data;
             }
 
             var denseIdx = _sparse[index];
-            if (denseIdx == invalid_data) {
+            if(denseIdx == invalid_data) {
                 _sparse[index] = denseIdx = checked(Count++);
 
-                if (denseIdx >= _dense.Length)
+                if(denseIdx >= _dense.Length)
                     Array.Resize(ref _dense, (int)BitOperations.RoundUpToPowerOf2((uint)(denseIdx + 1)));
             }
 
@@ -64,12 +64,12 @@ public struct SparseSet<TData>() where TData : struct {
             return ref _dense[denseIdx];
         }
     }
-    
+
     public readonly TData Remove(uint index) {
-        if (!Has(index)) {
+        if(!Has(index)) {
             throw new InvalidOperationException($"element at index {index} does not exist in the sparse set!");
         }
-        
+
         ref var ptr = ref _dense[_sparse[index]];
         var result = ptr;
         _sparse[index] = invalid_data;

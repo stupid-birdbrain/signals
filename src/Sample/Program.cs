@@ -8,15 +8,18 @@ using static Raylib_cs.Raymath;
 
 namespace Sample;
 
-internal struct Position : IComponent {
+internal struct Position : IComponent
+{
     public Vector2 Value;
 }
 
-internal struct Velocity : IComponent {
+internal struct Velocity : IComponent
+{
     public Vector2 Value;
 }
 
-public struct Transform2D : IComponent {
+public struct Transform2D : IComponent
+{
     public Vector2 Position;
     public float Rotation;
     public Vector2 Scale;
@@ -29,26 +32,28 @@ internal struct TestComponent : IComponent
 
 internal struct Controllable : IComponent;
 
-public static class Program {
-    public static void Main() {
+public static class Program
+{
+    public static void Main()
+    {
         SetConfigFlags(ConfigFlags.Msaa4xHint | ConfigFlags.ResizableWindow);
         InitWindow(
             800,
             450,
             "Signals Sample"
         );
-        
+
         SetTargetFPS(9000);
-        
-        
+
+
         Worlds.Initialize();
-        
+
         var world = Worlds.DefaultWorld;
-        
+
         Components.RegisterComponent(typeof(Position));
         Components.RegisterComponent(typeof(Velocity));
         Components.RegisterComponent(typeof(Transform2D));
-        
+
         PrefabLoading.LoadAllPrefabs(Assembly.GetExecutingAssembly());
 
         // Prefabs.TryGetPrefab("TestPrefab", out var prefab);
@@ -61,7 +66,7 @@ public static class Program {
         //
         // Console.WriteLine(data);
         // Console.WriteLine(velo);
-        
+
         // for (int i = 0; i < 50 ; i++) {
         //     var entity = world.Create();
         //     entity.Set(new Transform2D() { Position = new Vector2(Random.Shared.Next(0, 300), Random.Shared.Next(0, 300)) });
@@ -77,54 +82,64 @@ public static class Program {
         Prefabs.Create(controllerPrefab, Worlds.DefaultWorld.Index);
 
         var moveDir = Vector2.Zero;
-        
+
         world.Set(new Controllable());
-        
+
         Console.Write(world.Has<Controllable>());
-        
-        while (!WindowShouldClose()) {
-            
+
+        while (!WindowShouldClose())
+        {
+
             var query = world.Query().With<Transform2D>().With<Velocity>().Iterate();
-            while (query.Next() is { } entity) {
+            while (query.Next() is { } entity)
+            {
                 ref var pos = ref entity.Get<Transform2D>();
                 ref var vel = ref entity.Get<Velocity>();
-                
+
                 pos.Position += vel.Value * GetFrameTime();
             }
-            
-            if(IsKeyPressed(KeyboardKey.W)) {
+
+            if (IsKeyPressed(KeyboardKey.W))
+            {
                 moveDir.Y -= 1;
             }
-            if(IsKeyPressed(KeyboardKey.S)) {
+            if (IsKeyPressed(KeyboardKey.S))
+            {
                 moveDir.Y += 1;
             }
-            if(IsKeyPressed(KeyboardKey.A)) {
+            if (IsKeyPressed(KeyboardKey.A))
+            {
                 moveDir.X -= 1;
             }
-            if(IsKeyPressed(KeyboardKey.D)) {
+            if (IsKeyPressed(KeyboardKey.D))
+            {
                 moveDir.X += 1;
             }
 
-            if(moveDir.LengthSquared() > 0) {
+            if (moveDir.LengthSquared() > 0)
+            {
                 moveDir = Vector2.Normalize(moveDir);
             }
-            
+
             var playerQuery = world.Query().With<Controllable>().With<Velocity>().Iterate();
-            while (playerQuery.Next() is { } player) {
+            while (playerQuery.Next() is { } player)
+            {
                 ref var velocity = ref player.Get<Velocity>();
-                
+
                 velocity.Value += moveDir * 111.0f * GetFrameTime();
             }
-            
+
             #region drawing
             BeginDrawing();
             ClearBackground(Color.DarkGray);
-            
+
             var worldQuery = new WorldEntityQuery().With<Transform2D>().Iterate();
 
-            while (worldQuery.Next() is { } wld) {
+            while (worldQuery.Next() is { } wld)
+            {
                 var entityquery = wld.Query().With<Transform2D>().Iterate();
-                while (entityquery.Next() is { } entity) {
+                while (entityquery.Next() is { } entity)
+                {
                     ref var pos = ref entity.Get<Transform2D>();
 
                     var color = Color.White;
@@ -132,17 +147,17 @@ public static class Program {
                     {
                         color = Color.Red;
                     }
-                    
+
                     DrawRectangleV(pos.Position, new Vector2(10, 10), color);
                 }
             }
-            
+
             DrawFPS(0, 0);
-            
+
             EndDrawing();
             #endregion
         }
-        
+
         CloseWindow();
     }
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Numerics;
-
-namespace Signals.Core;
+﻿namespace Signals.Core;
 
 public readonly struct WorldQuery {
     private readonly BitmaskArray256 _requiredComponents;
@@ -21,7 +16,7 @@ public readonly struct WorldQuery {
 
     public WorldQuery With<T>() where T : struct, IComponent {
         uint componentId = Components.GetComponentIndex<T>();
-        if (componentId == 0) {
+        if(componentId == 0) {
             throw new InvalidOperationException($"component type {typeof(T).Name} is not registered.");
         }
 
@@ -32,7 +27,7 @@ public readonly struct WorldQuery {
 
     public WorldQuery Without<T>() where T : struct, IComponent {
         uint componentId = Components.GetComponentIndex<T>();
-        if (componentId == 0) {
+        if(componentId == 0) {
             throw new InvalidOperationException($"component type {typeof(T).Name} is not registered.");
         }
 
@@ -54,9 +49,9 @@ public readonly struct WorldQuery {
 
         private readonly bool _hasRequiredMask;
         private readonly bool _hasExcludedMask;
-        
+
         public Iterator(WorldQuery query) {
-            _requiredComponentsSpan = query._requiredComponents.AsSpan(); 
+            _requiredComponentsSpan = query._requiredComponents.AsSpan();
             _excludedComponentsSpan = query._excludedComponents.AsSpan();
 
             _hasRequiredMask = !_requiredComponentsSpan.IsEmpty;
@@ -68,43 +63,44 @@ public readonly struct WorldQuery {
         public World? Next() {
             var requiredSpan = _requiredComponentsSpan;
             var excludedSpan = _excludedComponentsSpan;
-            var liveWorldCount = Worlds.WorldCount; 
+            var liveWorldCount = Worlds.WorldCount;
 
-            while (true) {
+            while(true) {
                 _currentWorldIndex++;
                 // check against the current world count
-                if (_currentWorldIndex >= liveWorldCount) {
+                if(_currentWorldIndex >= liveWorldCount) {
                     return null;
                 }
-                
+
                 uint worldId = (uint)_currentWorldIndex;
-                
+
                 /*ensure UniqueWorldData slot for this world index in entity storage exists, and initialized before we try to access it*/
                 World currentWorld;
                 try {
-                    currentWorld = Worlds.GetWorld(worldId); 
-                } catch (IndexOutOfRangeException) {
-                    /*this should never happen, but technically could happen if world count decreases (should never happen)*/
-                    continue; 
+                    currentWorld = Worlds.GetWorld(worldId);
                 }
-
-                if (!currentWorld.Valid) {
+                catch(IndexOutOfRangeException) {
+                    /*this should never happen, but technically could happen if world count decreases (should never happen)*/
                     continue;
                 }
 
-                if (_hasRequiredMask) {
-                    if (!Components.HasAllWorldComponents(currentWorld.Index, requiredSpan)) {
+                if(!currentWorld.Valid) {
+                    continue;
+                }
+
+                if(_hasRequiredMask) {
+                    if(!Components.HasAllWorldComponents(currentWorld.Index, requiredSpan)) {
                         continue;
                     }
                 }
 
-                if (_hasExcludedMask) {
-                    if (Components.HasAnyWorldComponents(currentWorld.Index, excludedSpan)) {
+                if(_hasExcludedMask) {
+                    if(Components.HasAnyWorldComponents(currentWorld.Index, excludedSpan)) {
                         continue;
                     }
                 }
 
-                return currentWorld; 
+                return currentWorld;
             }
         }
     }

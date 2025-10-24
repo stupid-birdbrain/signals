@@ -1,28 +1,24 @@
-﻿﻿using Standard;
- using System.Numerics;
-using System.Runtime.CompilerServices;
+﻿namespace Signals.Core;
 
-namespace Signals.Core;
-
-public unsafe readonly struct Query(uint worldId) {
+public readonly unsafe struct Query(uint worldId) {
     private readonly uint _worldId = worldId;
-    internal readonly BitmaskArray256 _requiredComponents = new();
-    internal readonly BitmaskArray256 _excludedComponents = new();
+    internal readonly BitmaskArray256 RequiredComponents = new();
+    internal readonly BitmaskArray256 ExcludedComponents = new();
 
     internal Query(uint worldId, BitmaskArray256 requiredMask, BitmaskArray256 excludedMask) : this(worldId) {
         _worldId = worldId;
-        _requiredComponents = requiredMask;
-        _excludedComponents = excludedMask;
+        RequiredComponents = requiredMask;
+        ExcludedComponents = excludedMask;
     }
 
     public Query With<T>() where T : struct, IComponent {
         uint componentId = Components.GetComponentIndex<T>();
-        var newRequired = _requiredComponents.CloneAndSet((int)componentId);
+        var newRequired = RequiredComponents.CloneAndSet((int)componentId);
 
-        return new Query(_worldId, newRequired, _excludedComponents);
+        return new Query(_worldId, newRequired, ExcludedComponents);
     }
 
-    public Query Without<T>() where T : struct, IComponent => new Query(_worldId, _requiredComponents, _excludedComponents.CloneAndSet((int)Components.GetComponentIndex<T>()));
+    public Query Without<T>() where T : struct, IComponent => new Query(_worldId, RequiredComponents, ExcludedComponents.CloneAndSet((int)Components.GetComponentIndex<T>()));
 
     public Iterator Iterate() {
         Entities.EnsureWorldCapacity(_worldId);
@@ -30,8 +26,7 @@ public unsafe readonly struct Query(uint worldId) {
     }
 
 #pragma warning disable CS8500
-    public ref struct Iterator
-    {
+    public ref struct Iterator {
         private readonly uint _worldId;
         private readonly ReadOnlySpan<Bitset256> _requiredComponentsSpan;
         private readonly ReadOnlySpan<Bitset256> _excludedComponentsSpan;
@@ -43,10 +38,10 @@ public unsafe readonly struct Query(uint worldId) {
 
         public Iterator(Query query) {
             _worldId = query._worldId;
-            _requiredComponentsSpan = query._requiredComponents.AsSpan();
-            _excludedComponentsSpan = query._excludedComponents.AsSpan();
+            _requiredComponentsSpan = query.RequiredComponents.AsSpan();
+            _excludedComponentsSpan = query.ExcludedComponents.AsSpan();
 
-            fixed (Entities.UniqueWorldData* ptr = &Entities.WorldData[_worldId])
+            fixed(Entities.UniqueWorldData* ptr = &Entities.WorldData[_worldId])
                 _worldData = ptr;
 
             _currentPresenceMaskArrayIndex = -1;
@@ -54,7 +49,7 @@ public unsafe readonly struct Query(uint worldId) {
         }
 
         public Entity? Next() {
-            if (_worldData == null || _worldId >= Entities.WorldData.Length) {
+            if(_worldData == null || _worldId >= Entities.WorldData.Length) {
                 return null;
             }
 
@@ -71,15 +66,14 @@ public unsafe readonly struct Query(uint worldId) {
             bool hasRequiredMask = !requiredSpan.IsEmpty;
             bool hasExcludedMask = !excludedSpan.IsEmpty;
 
-            while (true) {
-                if (_currentPresenceBitset256.IsZero) {
+            while(true) {
+                if(_currentPresenceBitset256.IsZero) {
                     _currentPresenceMaskArrayIndex++;
-                    if (liveEntityPresenceMasksArray is null || _currentPresenceMaskArrayIndex >= liveEntityPresenceMasksArray.Length)
-                    {
+                    if(liveEntityPresenceMasksArray is null || _currentPresenceMaskArrayIndex >= liveEntityPresenceMasksArray.Length) {
                         return null;
                     }
                     _currentPresenceBitset256 = liveEntityPresenceMasksArray[_currentPresenceMaskArrayIndex];
-                    if (_currentPresenceBitset256.IsZero) {
+                    if(_currentPresenceBitset256.IsZero) {
                         continue;
                     }
                 }
@@ -89,25 +83,25 @@ public unsafe readonly struct Query(uint worldId) {
 
                 uint entityId = (uint)(_currentPresenceMaskArrayIndex * Bitset256.CAPACITY + bitInCurrentMask);
 
-                if (entityId >= liveWorldGenerationsLength) {
+                if(entityId >= liveWorldGenerationsLength) {
                     continue;
                 }
 
                 uint entityGeneration = liveEntityGenerationsArray[entityId];
                 var candidateEntity = new Entity(entityId, entityGeneration, _worldId);
 
-                if (!candidateEntity.Valid) {
+                if(!candidateEntity.Valid) {
                     continue;
                 }
 
-                if (hasRequiredMask) {
-                    if (!Components.HasAllComponents(candidateEntity, requiredSpan)) {
+                if(hasRequiredMask) {
+                    if(!Components.HasAllComponents(candidateEntity, requiredSpan)) {
                         continue;
                     }
                 }
 
-                if (hasExcludedMask) {
-                    if (Components.HasAnyComponents(candidateEntity, excludedSpan)) {
+                if(hasExcludedMask) {
+                    if(Components.HasAnyComponents(candidateEntity, excludedSpan)) {
                         continue;
                     }
                 }

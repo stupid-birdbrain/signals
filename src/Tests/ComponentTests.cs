@@ -18,20 +18,20 @@ public class ComponentTests {
         typeof(Worlds)
             .GetField("_worlds", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             ?.SetValue(null, new List<World>());
-        
+
         Entities.WorldData = Array.Empty<Entities.UniqueWorldData>();
-        
+
         Worlds.Initialize();
-        
+
         typeof(Components)
             .GetField("_componentCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             ?.SetValue(null, 0u);
 
         typeof(Components)
-            .GetField("_components", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            .GetField("ComponentInfos", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             ?.SetValue(null, Array.Empty<Components.Info>());
     }
-    
+
     [Test]
     public void ComponentRegistrationAssignsUniqueHandles() {
         var appleHandle = Components.GetComponentHandle<Apple>();
@@ -47,49 +47,49 @@ public class ComponentTests {
 
         Assert.That(Components.ComponentMasksPerEntity, Is.GreaterThanOrEqualTo(1));
     }
-    
+
     [Test]
     public void EntityGetComponent() {
         var entity = Entities.Create(Worlds.DefaultWorld.Index);
 
-        entity.Set(new Apple() with { Data = 10} );
+        entity.Set(new Apple() with { Data = 10 });
 
         var apple = entity.Get<Apple>();
-        
+
         Assert.That(apple.Data, Is.EqualTo(10));
     }
-    
+
     [Test]
     public void EntityHasComponent() {
         var entity = Entities.Create(Worlds.DefaultWorld.Index);
 
-        entity.Set(new Apple() with { Data = 10} );
-        
+        entity.Set(new Apple() with { Data = 10 });
+
         Assert.That(entity.Has<Apple>());
     }
-    
+
     [Test]
     public void EntitySetRemoveSetComponent() {
         var entity = Entities.Create(Worlds.DefaultWorld.Index);
 
-        entity.Set(new Apple() with { Data = 10 } );
+        entity.Set(new Apple() with { Data = 10 });
         entity.Remove<Apple>();
-        entity.Set(new Apple() with { Data = 5 } );
-        
+        entity.Set(new Apple() with { Data = 5 });
+
         var apple = entity.Get<Apple>();
-        
+
         Assert.That(apple.Data, Is.EqualTo(5));
     }
-    
+
     [Test]
     public void EntityDestroyRemovesComponents() {
         var entity = Entities.Create(Worlds.DefaultWorld.Index);
 
-        entity.Set(new Apple() with { Data = 10} );
-        entity.Set(new Orange() with {} );
+        entity.Set(new Apple() with { Data = 10 });
+        entity.Set(new Orange() with { });
 
         entity.Destroy();
-        
+
         Assert.That(!entity.Has<Apple>());
         Assert.That(!entity.Has<Orange>());
     }

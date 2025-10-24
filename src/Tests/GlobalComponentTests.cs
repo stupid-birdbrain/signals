@@ -12,21 +12,21 @@ public class GlobalComponentTests {
             ?.SetValue(null, 0u);
 
         typeof(Components)
-            .GetField("_components", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            .GetField("ComponentInfos", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             ?.SetValue(null, Array.Empty<Components.Info>());
     }
 
     [Test]
     public void SetGetGlobalComponent() {
         Globals.Set(new Apple());
-        
+
         Assert.That(Globals.Has<Apple>());
     }
-    
+
     [Test]
     public void RemoveWorldComponent() {
         Globals.Remove<Apple>();
-        
+
         Assert.That(!Globals.Has<Apple>());
     }
 }

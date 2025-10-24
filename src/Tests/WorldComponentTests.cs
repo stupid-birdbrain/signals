@@ -10,17 +10,17 @@ public class WorldComponentTests {
         typeof(Worlds)
             .GetField("_worlds", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             ?.SetValue(null, new List<World>());
-        
+
         Entities.WorldData = Array.Empty<Entities.UniqueWorldData>();
-        
+
         Worlds.Initialize();
-        
+
         typeof(Components)
             .GetField("_componentCount", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             ?.SetValue(null, 0u);
 
         typeof(Components)
-            .GetField("_components", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            .GetField("ComponentInfos", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
             ?.SetValue(null, Array.Empty<Components.Info>());
     }
 
@@ -29,16 +29,16 @@ public class WorldComponentTests {
         var world = Worlds.DefaultWorld;
 
         world.Set(new Apple());
-        
+
         Assert.That(world.Has<Apple>());
     }
-    
+
     [Test]
     public void RemoveWorldComponent() {
         var world = Worlds.DefaultWorld;
 
         world.Remove<Apple>();
-        
+
         Assert.That(!world.Has<Apple>());
     }
 }
