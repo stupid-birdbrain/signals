@@ -75,7 +75,7 @@ public partial class Components {
                 Array.Resize(ref ComponentInfos, (int)BitOperations.RoundUpToPowerOf2(handle.Id + 1));
             }
 
-            ComponentInfos[handle.Id] = new()
+            ComponentInfos[handle.Id] = new Info
             {
                 Type = typeof(T),
                 AddComponentFromObject = (entity, value) => SetComponent(entity, (T)value),
